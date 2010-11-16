@@ -22,5 +22,4 @@ public class Snippet {
 		return sentence;
 	}
 }
- 
 	
