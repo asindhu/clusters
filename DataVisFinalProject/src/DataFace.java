@@ -38,8 +38,8 @@ public class DataFace {
 		Map<String, Integer> topFeelings = new HashMap<String, Integer>();
 		
 		generateDataFile("http://ws4.wefeelfine.org:8080/ShowFeelings?display=xml&returnfields=sentence,feeling&limit=" + QUERY_SIZE + "&password=sepistheman");
-		parseXMLFile("output.xml");
-		
+		Map<String, Integer> snippets = parseXMLFile("output.xml");
+		//sort map and return top 
 		
 		return topFeelings;
 	}
@@ -50,6 +50,21 @@ public class DataFace {
 		//CODE GOES HERE
 		return topTopics;
 	}
+	
+	
+	
+	/* Main method to execute file */
+	public static void main(String[] args) throws Exception {
+		DataFace.getTopFeelings(10);
+	}
+	
+	
+	
+	
+	
+/* ****************************************************************************************************** */
+// Code below performs query and XML parsing
+/* ****************************************************************************************************** */
 	
 	/* Generates an XML file with general query */
 	private static void generateDataFile(String url) {
@@ -78,7 +93,7 @@ public class DataFace {
 	}
 	
 	/* Parse XML */
-	private static void parseXMLFile(String filename) {
+	private static Map<String, Integer> parseXMLFile(String filename) {
 		Map<String, Integer> snippets = new HashMap<String, Integer>();
 		
 		DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
@@ -111,19 +126,7 @@ public class DataFace {
 		        }
 			} catch (SAXException e) {e.printStackTrace();
 			} catch (IOException e) {e.printStackTrace();}	        
-		} catch (ParserConfigurationException e) {e.printStackTrace();
-		}
-        
+		} catch (ParserConfigurationException e) {e.printStackTrace();}
+        return snippets;
 	}
-	
-	
-	
-	
-	
-	/* Main method to execute file */
-	public static void main(String[] args) throws Exception {
-		DataFace.getTopFeelings(10);
-	}
-	
-	
 }
