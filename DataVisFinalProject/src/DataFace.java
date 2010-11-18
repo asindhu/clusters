@@ -17,7 +17,7 @@ public class DataFace {
 	private static final int QUERY_SIZE = 1500;
 	private static final String xmlfile = "output.xml";
 	private static Set<String> stopwords;
-	private static NodeList generalList;
+	private static Set<String> stopfeelings;
 	
 	
 	/* Returns the top feelings associated with a particular topic
@@ -67,41 +67,33 @@ public class DataFace {
 	public static Map<String, Integer> getTopics() {
 		return getTopics("", -1);
 	}
-		
-		
-	/* Main method to execute file */
-	public static void main(String[] args) throws Exception {
-		DataFace.init();
-		//Map<String, Integer> testing = getFeelings("china", 10);
-		Map<String, Integer> testing = getFeelings("happy", 10);
-		printMap(testing);
-	}
-	
-	
+			
 	
 /* ****************************************************************************************************** */
 // Initializes the stopwords list
 /* ****************************************************************************************************** */
 	
 	public static void init() {
-		buildStopWords("stopwords_withfeelings.txt");
+		stopwords = buildStopWords("stopwords_withfeelings.txt");
+		stopfeelings = buildStopWords("feelings.txt");
 	}
 	
 	/* Build stopwords list */
-	private static void buildStopWords(String filename) {
+	private static Set<String> buildStopWords(String filename) {
+		Set<String> set = new HashSet<String>();
 		try {
-			stopwords = new HashSet<String>();
 			FileReader input = new FileReader(filename);
 			BufferedReader buffer = new BufferedReader(input);
 
 			String line = buffer.readLine();
 			while (line != null) {
-				stopwords.add(line);
+				set.add(line);
 				line = buffer.readLine();
 			}
 			buffer.close();
 		} 
 		catch (IOException e) {e.printStackTrace();	}
+		return set;
 	}
 
 	
@@ -231,12 +223,48 @@ public class DataFace {
 	// Experiment: Get Feelings for Feelings
 	/* ****************************************************************************************************** */
 	
-//	public Map<String, Integer> getFeelingsForFeelings(String feeling, int num) {
-//		generateXMLFile("&contains=" + topic);
-//		NodeList list = getNodeListFromXMLFile(xmlfile);
-//		Map<String, Integer> feelings = getFeelingsFromNodeList(list);
-//		if (num != -1) feelings = getTopNum(feelings, num);
-//		return feelings;
-//	}
+	public static Map<String, Integer> getRelatedFeelings(String feeling, int num) {
+		generateXMLFile("&feeling=" + feeling);
+		NodeList list = getNodeListFromXMLFile(xmlfile);
+		Map<String, Integer> feelings = getFeelingsFromFeelingsNodeList(list);
+		if (num != -1) feelings = getTopNum(feelings, num);
+		return feelings;
+	}
+	
+	private static Map<String, Integer> getFeelingsFromFeelingsNodeList(NodeList list) {
+		Map<String, Integer> histogram = new HashMap<String, Integer>();
+		
+		for (int s = 0; s < list.getLength(); s++) {
+			Element element = (Element) list.item(s);
+			String sentence = element.getAttribute("sentence");
+			StringTokenizer tokenizer = new StringTokenizer(sentence);
+
+			while (tokenizer.hasMoreTokens()) {
+				String word = tokenizer.nextToken();
+				if (stopfeelings.contains(word) && word.length() > 1) {
+					if (histogram.containsKey(word)) {
+						int count = histogram.get(word) + 1;
+						histogram.put(word, count);
+					} else {
+						histogram.put(word, 1);
+					}
+				}
+			}
+		}
+		return histogram;
+	}
+
+/* ****************************************************************************************************** */
+// Main method for testing
+/* ****************************************************************************************************** */
+	
+	/* Main method to execute file */
+	public static void main(String[] args) throws Exception {
+		DataFace.init();
+		//Map<String, Integer> testing = getFeelings("china", 10);
+		//Map<String, Integer> testing = getFeelings("happy", 10);
+		Map<String, Integer> testing = getRelatedFeelings("loved", 10);
+		printMap(testing);
+	}
 	
 }
