@@ -35,7 +35,7 @@ public class DataFace {
 		Map<String, Integer> topTopics = getTopTopics(10);
 		
 		//Map<String, Integer> feelings = getFeelings("obama");
-		Map<String, Integer> topics = getTopics("disappointed");
+		Map<String, Integer> topics = getTopics("grumpy");
 		
 		printMap(topics);
 	}
