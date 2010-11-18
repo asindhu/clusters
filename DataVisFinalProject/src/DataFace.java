@@ -19,62 +19,72 @@ public class DataFace {
 	private static Set<String> stopwords;
 	private static NodeList generalList;
 	
-	/* Returns WeFeelFine query results for a given Topic */
-	public static Map<String, Integer> getFeelings(String topic) {
+	
+	/* Returns the top feelings associated with a particular topic
+	 * If no num is provided, it returns all feelings associated with the topic
+	 * If no topic is provided, it simply returns the top feelings across all topics
+	 */
+	public static Map<String, Integer> getFeelings(String topic, int num) {
 		generateXMLFile("&contains=" + topic);
 		NodeList list = getNodeListFromXMLFile(xmlfile);
-		Map<String, Integer> feelings = getFeelingsFromNodeList(list);		
+		Map<String, Integer> feelings = getFeelingsFromNodeList(list);
+		if (num != -1) feelings = getTopNum(feelings, num);
 		return feelings;
 	}
 	
+	public static Map<String, Integer> getFeelings(String topic) {
+		return getFeelings(topic, -1);
+	}
 	
-	/* Returns WeFeelFine query results for a given Feeling */
-	public static Map<String, Integer> getTopics(String feeling) {
-		generateXMLFile("&feeling=" + feeling);
+	public static Map<String, Integer> getFeelings(int num) {
+		return getFeelings("", num);
+	}
+	
+	public static Map<String, Integer> getFeelings() {
+		return getFeelings("", -1);
+	}
+	
+	/* Returns the top topics associated with a particular feeling
+	 * If no num is provided, it returns all topics associated with the feeling
+	 * If no topic is provided, it simply returns the top topics across all feelings
+	 */
+	public static Map<String, Integer> getTopics(String feeling, int num) {
+		generateXMLFile("&contains=" + feeling);
 		NodeList list = getNodeListFromXMLFile(xmlfile);
-		Map<String, Integer> topics = getTopicsFromNodeList(list);		
-		return topics;
+		Map<String, Integer> Topics = getTopicsFromNodeList(list);
+		if (num != -1) Topics = getTopNum(Topics, num);
+		return Topics;
 	}
 	
-	
-	/* Returns the top Feelings and their frequency to populate initial clusters */
-	public static Map<String, Integer> getTopFeelings(int top) {
-		Map<String, Integer> topFeelings = getFeelingsFromNodeList(generalList);
-		topFeelings = getTopNum(topFeelings, top);
-		return topFeelings;
+	public static Map<String, Integer> getTopics(String feeling) {
+		return getTopics(feeling, -1);
 	}
 	
-	
-	/* Returns the top Topics and their frequency to populate initial clusters */
-	public static Map<String, Integer> getTopTopics(int top) {
-		Map<String, Integer> topTopics = getTopicsFromNodeList(generalList);
-		topTopics = getTopNum(topTopics, top);
-		return topTopics;
+	public static Map<String, Integer> getTopics(int num) {
+		return getTopics("", num);
 	}
 	
-	
+	public static Map<String, Integer> getTopics() {
+		return getTopics("", -1);
+	}
+		
+		
 	/* Main method to execute file */
 	public static void main(String[] args) throws Exception {
 		DataFace.init();
-		Map<String, Integer> topFeelings = getTopFeelings(10);
-		Map<String, Integer> topTopics = getTopTopics(10);
-		Map<String, Integer> topics = getTopics("disappointed");
-		printMap(topFeelings);
+		//Map<String, Integer> testing = getFeelings("china", 10);
+		Map<String, Integer> testing = getFeelings("happy", 10);
+		printMap(testing);
 	}
 	
 	
 	
 /* ****************************************************************************************************** */
-// Initializes the DataFace class by building stopwords and doing general query
+// Initializes the stopwords list
 /* ****************************************************************************************************** */
 	
 	public static void init() {
-		//Build stopword list
 		buildStopWords("stopwords_withfeelings.txt");
-		
-		//Build nodelist for general query
-		generateXMLFile("");
-		generalList = getNodeListFromXMLFile(xmlfile);
 	}
 	
 	/* Build stopwords list */
@@ -182,7 +192,7 @@ public class DataFace {
 
 
 /* ****************************************************************************************************** */
-// Returns a sorted hash map
+// Returns a hashmap histogram containing the most frequent "num" elements of the provided histogram
 /* ****************************************************************************************************** */
 	
 	private static Map<String, Integer> getTopNum(final Map<String, Integer> histogram, int num) {
@@ -203,24 +213,16 @@ public class DataFace {
 	
 	
 	/* Print a hashmap in sorted order */
-	private static void printMap(Map<String, Integer> map) {
-		ArrayList as = new ArrayList(map.entrySet());  
-
-		Collections.sort( as , new Comparator() {  
-			public int compare( Object o1 , Object o2 )  
-			{  
-				Map.Entry e1 = (Map.Entry)o1 ;  
-				Map.Entry e2 = (Map.Entry)o2 ;  
-				Integer first = (Integer)e1.getValue();  
-				Integer second = (Integer)e2.getValue();  
-				return first.compareTo( second );  
+	private static void printMap(final Map<String, Integer> histogram) {
+		ArrayList<String> arr = new ArrayList<String>(histogram.keySet());  
+		Collections.sort(arr, new Comparator<String>() {  
+			public int compare(String a, String b) {    
+				return histogram.get(b) - histogram.get(a);  
 			}  
-		});  
+		});    
 
-		Iterator i = as.iterator();  
-		while ( i.hasNext() )  
-		{  
-			System.out.println( (Map.Entry)i.next() );  
+		for (String s: arr) {
+			System.out.println(s + ": " + histogram.get(s));  
 		} 
 	}
 }
