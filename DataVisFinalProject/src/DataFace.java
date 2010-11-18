@@ -49,7 +49,7 @@ public class DataFace {
 	 * If no topic is provided, it simply returns the top topics across all feelings
 	 */
 	public static Map<String, Integer> getTopics(String feeling, int num) {
-		generateXMLFile("&contains=" + feeling);
+		generateXMLFile("&feeling=" + feeling);
 		NodeList list = getNodeListFromXMLFile(xmlfile);
 		Map<String, Integer> Topics = getTopicsFromNodeList(list);
 		if (num != -1) Topics = getTopNum(Topics, num);
@@ -225,4 +225,18 @@ public class DataFace {
 			System.out.println(s + ": " + histogram.get(s));  
 		} 
 	}
+	
+	
+	/* ****************************************************************************************************** */
+	// Experiment: Get Feelings for Feelings
+	/* ****************************************************************************************************** */
+	
+//	public Map<String, Integer> getFeelingsForFeelings(String feeling, int num) {
+//		generateXMLFile("&contains=" + topic);
+//		NodeList list = getNodeListFromXMLFile(xmlfile);
+//		Map<String, Integer> feelings = getFeelingsFromNodeList(list);
+//		if (num != -1) feelings = getTopNum(feelings, num);
+//		return feelings;
+//	}
+	
 }
