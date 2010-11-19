@@ -14,7 +14,7 @@ import org.xml.sax.SAXException;
 
 public class DataFace {
 	
-	private static final int QUERY_SIZE = 1500;
+	private static final int QUERY_SIZE = 2000;
 	private static final String xmlfile = "output.xml";
 	private static Set<String> stopwords;
 	private static Set<String> stopfeelings;
@@ -75,7 +75,7 @@ public class DataFace {
 	
 	public static void init() {
 		stopwords = buildStopWords("stopwords_withfeelings.txt");
-		stopfeelings = buildStopWords("feelings.txt");
+		stopfeelings = buildStopWords("feelings_shortlist.txt");
 	}
 	
 	/* Build stopwords list */
@@ -206,6 +206,10 @@ public class DataFace {
 	
 	/* Print a hashmap in sorted order */
 	private static void printMap(final Map<String, Integer> histogram) {
+		if (histogram.isEmpty()) {
+			System.out.println("No results!");
+			return;
+		}
 		ArrayList<String> arr = new ArrayList<String>(histogram.keySet());  
 		Collections.sort(arr, new Comparator<String>() {  
 			public int compare(String a, String b) {    
@@ -226,12 +230,12 @@ public class DataFace {
 	public static Map<String, Integer> getRelatedFeelings(String feeling, int num) {
 		generateXMLFile("&feeling=" + feeling);
 		NodeList list = getNodeListFromXMLFile(xmlfile);
-		Map<String, Integer> feelings = getFeelingsFromFeelingsNodeList(list);
+		Map<String, Integer> feelings = getFeelingsFromFeelingsNodeList(feeling, list);
 		if (num != -1) feelings = getTopNum(feelings, num);
 		return feelings;
 	}
 	
-	private static Map<String, Integer> getFeelingsFromFeelingsNodeList(NodeList list) {
+	private static Map<String, Integer> getFeelingsFromFeelingsNodeList(String feeling, NodeList list) {
 		Map<String, Integer> histogram = new HashMap<String, Integer>();
 		
 		for (int s = 0; s < list.getLength(); s++) {
@@ -241,7 +245,7 @@ public class DataFace {
 
 			while (tokenizer.hasMoreTokens()) {
 				String word = tokenizer.nextToken();
-				if (stopfeelings.contains(word) && word.length() > 1) {
+				if (stopfeelings.contains(word) && !word.equals(feeling) && word.length() > 1) {
 					if (histogram.containsKey(word)) {
 						int count = histogram.get(word) + 1;
 						histogram.put(word, count);
@@ -261,10 +265,12 @@ public class DataFace {
 	/* Main method to execute file */
 	public static void main(String[] args) throws Exception {
 		DataFace.init();
-		//Map<String, Integer> testing = getFeelings("china", 10);
-		//Map<String, Integer> testing = getFeelings("happy", 10);
-		Map<String, Integer> testing = getRelatedFeelings("loved", 10);
+		//Map<String, Integer> testing = getFeelings("work", 10);
+		Map<String, Integer> testing = getTopics("happy", 10);
+		Map<String, Integer> testing2 = getTopics("sad", 10);
+		//Map<String, Integer> testing = getRelatedFeelings("nervous", 10);
 		printMap(testing);
+		printMap(testing2);
 	}
 	
 }
