@@ -14,7 +14,7 @@ import org.xml.sax.SAXException;
 
 public class DataFace {
 	
-	private static final int QUERY_SIZE = 2000;
+	private static final int QUERY_SIZE = 15000;
 	private static final String xmlfile = "output.xml";
 	private static Set<String> stopwords;
 	private static Set<String> stopfeelings;
@@ -75,7 +75,7 @@ public class DataFace {
 	
 	public static void init() {
 		stopwords = buildStopWords("stopwords_withfeelings.txt");
-		stopfeelings = buildStopWords("feelings_shortlist.txt");
+		//stopfeelings = buildStopWords("feelings_shortlist.txt");
 	}
 	
 	/* Build stopwords list */
@@ -266,10 +266,11 @@ public class DataFace {
 	public static void main(String[] args) throws Exception {
 		DataFace.init();
 		//Map<String, Integer> testing = getFeelings("work", 10);
-		Map<String, Integer> testing = getTopics("happy", 10);
-		Map<String, Integer> testing2 = getTopics("sad", 10);
+		Map<String, Integer> testing = getTopics("disappointed", 10);
+		Map<String, Integer> testing2 = getTopics("angry", 10);
 		//Map<String, Integer> testing = getRelatedFeelings("nervous", 10);
 		printMap(testing);
+		System.out.println("----------------");
 		printMap(testing2);
 	}
 	
