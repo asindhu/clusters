@@ -69,8 +69,6 @@ public class DataFace {
 /* ****************************************************************************************************** */
 	
 	public static void init() {
-		stopwords = buildStopwords("stopwords_withfeelings.txt");
-		stopfeelings = buildStopwords("feelings_shortlist.txt");
 		benchmarkFeelings = buildFeelingsBenchmark("feelings_benchmark.txt");
 		benchmarkWords = buildWordsBenchmark("words_benchmark.txt");
 	}
@@ -334,7 +332,6 @@ public class DataFace {
 		for (String s: keys) {
 			if (s == "TOTAL_COUNT") continue;
 			double frequencyCurrent = (double) histogram.get(s) / total;
-			System.out.println(s);
 			double frequencyGeneral = benchmarkFeelings.get(s);
 			double factor = frequencyCurrent / frequencyGeneral;
 			factors.put(s, factor);
@@ -391,6 +388,7 @@ public class DataFace {
 	/* Main method to execute file */
 	public static void main(String[] args) throws Exception {
 		DataFace.init();
+
 		//Map<String, Integer> testing = getFeelings("unemployment", 10);
 		//Map<String, Integer> testing = getTopics("happy", 10);
 		//Map<String, Integer> testing2 = getTopics("sad", 10);
@@ -410,7 +408,6 @@ public class DataFace {
 		Map<String, Integer> counts = getRelatedFeelings(query, -1);
 		Map<String, Double> factors = getUniqueFeelings(counts);
 		getTopFactors(factors, 10);
-
 	}
 	
 }
