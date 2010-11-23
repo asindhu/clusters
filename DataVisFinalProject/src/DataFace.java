@@ -1,24 +1,19 @@
 import java.io.*;
 import java.util.*;
 import java.net.*;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
+import javax.xml.parsers.*;
+import org.w3c.dom.*;
 import org.xml.sax.SAXException;
 
 
 public class DataFace {
 	
-	private static final int QUERY_SIZE = 2000;
+	private static final int QUERY_SIZE = 5000;
 	private static final String xmlfile = "output.xml";
 	private static Set<String> stopwords;
 	private static Set<String> stopfeelings;
-	
+	private static Map<String, Double> benchmarkFeelings;
+	private static Map<String, Double> benchmarkWords;
 	
 	/* Returns the top feelings associated with a particular topic
 	 * If no num is provided, it returns all feelings associated with the topic
@@ -74,12 +69,14 @@ public class DataFace {
 /* ****************************************************************************************************** */
 	
 	public static void init() {
-		stopwords = buildStopWords("stopwords_withfeelings.txt");
-		stopfeelings = buildStopWords("feelings_shortlist.txt");
+		stopwords = buildStopwords("stopwords_withfeelings.txt");
+		stopfeelings = buildStopwords("feelings_shortlist.txt");
+		benchmarkFeelings = buildFeelingsBenchmark("feelings_benchmark.txt");
+		benchmarkWords = buildWordsBenchmark("words_benchmark.txt");
 	}
 	
 	/* Build stopwords list */
-	private static Set<String> buildStopWords(String filename) {
+	private static Set<String> buildStopwords(String filename) {
 		Set<String> set = new HashSet<String>();
 		try {
 			FileReader input = new FileReader(filename);
@@ -95,7 +92,53 @@ public class DataFace {
 		catch (IOException e) {e.printStackTrace();	}
 		return set;
 	}
+	
+	
+	private static Map<String, Double> buildFeelingsBenchmark(String filename) {
+		Map<String, Double> histogram = new HashMap<String, Double>();
+		try {
+			FileReader input = new FileReader(filename);
+			BufferedReader buffer = new BufferedReader(input);
 
+			String line = buffer.readLine();
+			while (line != null) {
+				StringTokenizer tokenizer = new StringTokenizer(line);
+				
+				String word = tokenizer.nextToken();
+				Double frequency = Double.parseDouble(tokenizer.nextToken());
+				histogram.put(word, frequency);
+				
+				line = buffer.readLine();
+			}
+			buffer.close();
+		} 
+		catch (IOException e) {e.printStackTrace();	}
+		return histogram;
+	}
+
+	
+	private static Map<String, Double> buildWordsBenchmark(String filename) {
+		Map<String, Double> histogram = new HashMap<String, Double>();
+		try {
+			FileReader input = new FileReader(filename);
+			BufferedReader buffer = new BufferedReader(input);
+
+			String line = buffer.readLine();
+			while (line != null) {
+				StringTokenizer tokenizer = new StringTokenizer(line);
+				
+				String word = tokenizer.nextToken();
+				Double frequency = Double.parseDouble(tokenizer.nextToken());
+				histogram.put(word, frequency);
+				
+				line = buffer.readLine();
+			}
+			buffer.close();
+		} 
+		catch (IOException e) {e.printStackTrace();	}
+		return histogram;
+	}
+	
 	
 	
 /* ****************************************************************************************************** */
@@ -140,11 +183,10 @@ public class DataFace {
 		return null;
 	}
 	
-	
 	/* Generates a histogram for "feelings" */
 	private static Map<String, Integer> getFeelingsFromNodeList(NodeList list) {
 		Map<String, Integer> histogram = new HashMap<String, Integer>();        
-        for (int s = 0; s < list.getLength(); s++) {
+		for (int s = 0; s < list.getLength(); s++) {
         	Element element = (Element)list.item(s);
         	String feeling = element.getAttribute("feeling");
         
@@ -162,6 +204,7 @@ public class DataFace {
 	private static Map<String, Integer> getTopicsFromNodeList(NodeList list) {
 		Map<String, Integer> histogram = new HashMap<String, Integer>();
 		
+		int total = 0;
 		for (int s = 0; s < list.getLength(); s++) {
 			Element element = (Element) list.item(s);
 			String sentence = element.getAttribute("sentence");
@@ -169,19 +212,41 @@ public class DataFace {
 
 			while (tokenizer.hasMoreTokens()) {
 				String word = tokenizer.nextToken();
-				if (!stopwords.contains(word) && word.length() > 1) {
+				if (benchmarkWords.keySet().contains(word) && word.length() > 1) {
 					if (histogram.containsKey(word)) {
 						int count = histogram.get(word) + 1;
 						histogram.put(word, count);
+						total++;
 					} else {
 						histogram.put(word, 1);
 					}
 				}
 			}
 		}
+		histogram.put("TOTAL_COUNT", total);
 		return histogram;
 	}
 
+	
+	private static Map<String, Double> getUniqueTopics(Map<String, Integer> histogram) {
+		Map<String, Double> factors = new HashMap<String, Double>();
+		Set<String> keys = histogram.keySet();
+		
+		int total = histogram.get("TOTAL_COUNT");
+		
+		for (String s: keys) {
+			if (s == "TOTAL_COUNT") continue;
+			double frequencyCurrent = (double) histogram.get(s) / total;
+			double frequencyGeneral = benchmarkWords.get(s);
+			double factor = frequencyCurrent / frequencyGeneral;
+			factors.put(s, factor);
+		}
+		
+		return factors;
+	}
+	
+	
+	
 
 /* ****************************************************************************************************** */
 // Returns a hashmap histogram containing the most frequent "num" elements of the provided histogram
@@ -203,29 +268,28 @@ public class DataFace {
 		return tops;
 	}
 	
-	
-	/* Print a hashmap in sorted order */
-	private static void printMap(final Map<String, Integer> histogram) {
-		if (histogram.isEmpty()) {
-			System.out.println("No results!");
-			return;
-		}
-		ArrayList<String> arr = new ArrayList<String>(histogram.keySet());  
+	private static Map<String, Double> getTopFactors(final Map<String, Double> histogram, int num) {
+		ArrayList<String> arr = new ArrayList<String>(histogram.keySet());
 		Collections.sort(arr, new Comparator<String>() {  
 			public int compare(String a, String b) {    
-				return histogram.get(b) - histogram.get(a);  
+				return (int) (histogram.get(b) - histogram.get(a));  
 			}  
-		});    
-
-		for (String s: arr) {
-			System.out.println(s + ": " + histogram.get(s));  
-		} 
+		});  
+		
+		Map<String, Double> tops = new HashMap<String, Double>();
+		for (int i = 0; i < num; i++) {
+			String key = arr.get(i);
+			Double value = histogram.get(key);
+			System.out.println(key + ": " + value);
+			tops.put(key, value); 
+		}		
+		return tops;
 	}
 	
 	
-	/* ****************************************************************************************************** */
-	// Experiment: Get Feelings for Feelings
-	/* ****************************************************************************************************** */
+/* ****************************************************************************************************** */
+// Get Feelings Associated With Feelings
+/* ****************************************************************************************************** */
 	
 	public static Map<String, Integer> getRelatedFeelings(String feeling, int num) {
 		generateXMLFile("&feeling=" + feeling);
@@ -238,6 +302,7 @@ public class DataFace {
 	private static Map<String, Integer> getFeelingsFromFeelingsNodeList(String feeling, NodeList list) {
 		Map<String, Integer> histogram = new HashMap<String, Integer>();
 		
+		int total = 0;
 		for (int s = 0; s < list.getLength(); s++) {
 			Element element = (Element) list.item(s);
 			String sentence = element.getAttribute("sentence");
@@ -245,18 +310,79 @@ public class DataFace {
 
 			while (tokenizer.hasMoreTokens()) {
 				String word = tokenizer.nextToken();
-				if (stopfeelings.contains(word) && !word.equals(feeling) && word.length() > 1) {
+				if (benchmarkFeelings.keySet().contains(word) && !word.equals(feeling) && word.length() > 1) {
 					if (histogram.containsKey(word)) {
 						int count = histogram.get(word) + 1;
 						histogram.put(word, count);
 					} else {
 						histogram.put(word, 1);
 					}
+					total++;
 				}
 			}
 		}
+		histogram.put("TOTAL_COUNT", total);
 		return histogram;
 	}
+	
+	private static Map<String, Double> getUniqueFeelings(Map<String, Integer> histogram) {
+		Map<String, Double> factors = new HashMap<String, Double>();
+		Set<String> keys = histogram.keySet();
+		
+		int total = histogram.get("TOTAL_COUNT");
+		
+		for (String s: keys) {
+			if (s == "TOTAL_COUNT") continue;
+			double frequencyCurrent = (double) histogram.get(s) / total;
+			System.out.println(s);
+			double frequencyGeneral = benchmarkFeelings.get(s);
+			double factor = frequencyCurrent / frequencyGeneral;
+			factors.put(s, factor);
+		}
+		
+		return factors;
+	}
+	
+	
+/* ****************************************************************************************************** */
+// Printing functions
+/* ****************************************************************************************************** */
+			
+		/* Print a hashmap in sorted order */
+		private static void printMap(final Map<String, Integer> histogram) {
+			if (histogram.isEmpty()) {
+				System.out.println("No results!");
+				return;
+			}
+			ArrayList<String> arr = new ArrayList<String>(histogram.keySet());  
+			Collections.sort(arr, new Comparator<String>() {  
+				public int compare(String a, String b) {    
+					return histogram.get(b) - histogram.get(a);  
+				}  
+			});    
+
+			for (String s: arr) {
+				System.out.println(s + ": " + histogram.get(s));  
+			} 
+		}
+		
+		private static void printBenchmark(final Map<String, Double> histogram) {
+			if (histogram.isEmpty()) {
+				System.out.println("No results!");
+				return;
+			}
+			ArrayList<String> arr = new ArrayList<String>(histogram.keySet());  
+			Collections.sort(arr, new Comparator<String>() {  
+				public int compare(String a, String b) {    
+					return (int) (histogram.get(b) - histogram.get(a));  
+				}  
+			});    
+
+			for (String s: arr) {
+				System.out.println(s + ": " + histogram.get(s));  
+			} 
+		}
+
 
 /* ****************************************************************************************************** */
 // Main method for testing
@@ -265,12 +391,26 @@ public class DataFace {
 	/* Main method to execute file */
 	public static void main(String[] args) throws Exception {
 		DataFace.init();
-		//Map<String, Integer> testing = getFeelings("work", 10);
-		Map<String, Integer> testing = getTopics("happy", 10);
-		Map<String, Integer> testing2 = getTopics("sad", 10);
-		//Map<String, Integer> testing = getRelatedFeelings("nervous", 10);
-		printMap(testing);
-		printMap(testing2);
+		//Map<String, Integer> testing = getFeelings("unemployment", 10);
+		//Map<String, Integer> testing = getTopics("happy", 10);
+		//Map<String, Integer> testing2 = getTopics("sad", 10);
+		//Map<String, Integer> testing = getRelatedFeelings("happy", 10);
+		//printMap(testing);
+		//printMap(testing2);
+		
+		
+//		String query = "family";
+//		System.out.println("Feelings associated with: " + query);
+//		Map<String, Integer> counts = getTopics(query);
+//		Map<String, Double> factors = getUniqueTopics(counts);
+//		getTopFactors(factors, 10);
+		
+		String query = "angry";
+		System.out.println("Feelings associated with: " + query);
+		Map<String, Integer> counts = getRelatedFeelings(query, -1);
+		Map<String, Double> factors = getUniqueFeelings(counts);
+		getTopFactors(factors, 10);
+
 	}
 	
 }
