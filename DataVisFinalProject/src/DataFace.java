@@ -71,6 +71,7 @@ public class DataFace {
 	public static void init() {
 		benchmarkFeelings = buildFeelingsBenchmark("feelings_benchmark.txt");
 		benchmarkWords = buildWordsBenchmark("words_benchmark.txt");
+		stopwords = buildStopwords("stopwords_withfeelings.txt");
 	}
 	
 	/* Build stopwords list */
@@ -210,7 +211,7 @@ public class DataFace {
 
 			while (tokenizer.hasMoreTokens()) {
 				String word = tokenizer.nextToken();
-				if (benchmarkWords.keySet().contains(word) && word.length() > 1) {
+				if (benchmarkWords.keySet().contains(word) && word.length() > 1 && !stopwords.contains(word)) {
 					if (histogram.containsKey(word)) {
 						int count = histogram.get(word) + 1;
 						histogram.put(word, count);
@@ -221,7 +222,7 @@ public class DataFace {
 				}
 			}
 		}
-		histogram.put("TOTAL_COUNT", total);
+		//histogram.put("TOTAL_COUNT", total);
 		return histogram;
 	}
 
@@ -380,7 +381,78 @@ public class DataFace {
 			} 
 		}
 
+/* ****************************************************************************************************** */
+// Write to file functions
+/* ****************************************************************************************************** */
 
+		private static void writeTopicsToXML(Map<String, Integer> topics, String filename) throws IOException {
+			FileWriter fstream = new FileWriter(filename);
+	        BufferedWriter out = new BufferedWriter(fstream);
+			
+	        /* XML preamble */
+			out.write("<?xml version='1.0' encoding='UTF-8'?>\n");
+			out.write("<graphml xmlns='http://graphml.graphdrawing.org/xmlns'>\n");
+			out.write("<graph edgedefault='undirected'>\n");
+			out.write("<key id='word' for='node' attr.name='word' attr.type='string'/>\n");
+			out.write("<key id='weight' for='node' attr.name='weight' attr.type='integer'/>\n");
+			
+			/* Create a center node */
+			/*
+			out.write("<node id='0'>\n");
+			out.write("<data key='word'></data>\n");
+			out.write("<data key='weight'>1</data>\n");
+			out.write("</node>\n");
+			*/
+			/* Write each "node" into the XML file */
+			ArrayList<String> keys = new ArrayList<String>(topics.keySet());
+	        String topic;
+	        int weight;
+	        
+			for (int i = 0; i < keys.size(); i++) {
+	        	topic = keys.get(i);
+	        	weight = topics.get(topic);
+	        	
+	        	/* Create node */
+				out.write("<node id='" + (i+1) + "'>\n");
+				out.write("<data key='word'>" + topic + "</data>\n");
+				out.write("<data key='weight'>" + weight + "</data>\n");
+				out.write("</node>\n");
+				
+				/* Create edge from center node to this node */
+				/*out.write("<edge source='0' target='" + (i+1) + "'></edge>\n");*/
+			}
+			
+			/* XML end */
+			out.write("</graph>\n");
+			out.write("</graphml>\n");
+			
+			out.close();
+		}
+		
+		private static void writeTopicsToCSV(Map<String, Integer> topics, String filename) throws IOException {
+			FileWriter fstream = new FileWriter(filename);
+	        BufferedWriter out = new BufferedWriter(fstream);
+			
+	        /* Write CSV header */
+	        out.write("word,weight\n");
+	        
+			/* Write each table entry into the XML file */
+			ArrayList<String> keys = new ArrayList<String>(topics.keySet());
+	        String topic;
+	        int weight;
+	        
+			for (int i = 0; i < keys.size(); i++) {
+	        	topic = keys.get(i);
+	        	weight = topics.get(topic);
+	        	
+	        	/* Create entry */
+				out.write(topic + "," + weight + "\n");
+
+			}
+			
+			out.close();
+		}
+		
 /* ****************************************************************************************************** */
 // Main method for testing
 /* ****************************************************************************************************** */
@@ -403,11 +475,16 @@ public class DataFace {
 //		Map<String, Double> factors = getUniqueTopics(counts);
 //		getTopFactors(factors, 10);
 		
-		String query = "angry";
-		System.out.println("Feelings associated with: " + query);
-		Map<String, Integer> counts = getRelatedFeelings(query, -1);
-		Map<String, Double> factors = getUniqueFeelings(counts);
-		getTopFactors(factors, 10);
+//		String query = "angry";
+//		System.out.println("Feelings associated with: " + query);
+//		Map<String, Integer> counts = getRelatedFeelings(query, -1);
+//		Map<String, Double> factors = getUniqueFeelings(counts);
+//		getTopFactors(factors, 10);
+		
+		Map<String, Integer> topics = getTopics("angry", 24);
+		writeTopicsToXML(topics, "../data/data.xml");
+		writeTopicsToCSV(topics, "../data/data.csv");
+		
 	}
 	
 }

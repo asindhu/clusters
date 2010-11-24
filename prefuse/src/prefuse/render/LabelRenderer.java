@@ -303,6 +303,7 @@ public class LabelRenderer extends AbstractShapeRenderer {
     /**
      * @see prefuse.render.AbstractShapeRenderer#getRawShape(prefuse.visual.VisualItem)
      */
+    
     protected Shape getRawShape(VisualItem item) {
         m_text = getText(item);
         Image  img  = getImage(item);
