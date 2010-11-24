@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns">
+	<graph edgedefault="undirected">
+		<!-- data schema -->
+		<key id="word" for="node" attr.name="word" attr.type="string"/>
+		<key id="weight" for="node" attr.name="weight" attr.type="double"/>
+		
+		<!-- nodes --> 
+		<node id="1">
+			<data key="word">wordone</data>
+			<data key="weight">2.3</data>
+		</node>
+		
+		<node id="2">
+			<data key="word">wordtwo</data>
+			<data key="weight">5.1</data>
+		</node>
+		
+		<node id="3">
+			<data key="word">wordtwo</data>
+			<data key="weight">3.4</data>
+		</node>
+		
+		<!-- edges (none) -->
+	</graph>
+</graphml>
