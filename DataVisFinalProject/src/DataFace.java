@@ -481,7 +481,7 @@ public class DataFace {
 //		Map<String, Double> factors = getUniqueFeelings(counts);
 //		getTopFactors(factors, 10);
 		
-		Map<String, Integer> topics = getTopics("horny", 24);
+		Map<String, Integer> topics = getTopics("angry", 24);
 		writeTopicsToXML(topics, "../data/data.xml");
 		writeTopicsToCSV(topics, "../data/data.csv");
 		
