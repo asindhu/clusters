@@ -356,8 +356,8 @@ public class DataFace {
 			Collections.sort(arr, new Comparator<String>() {  
 				public int compare(String a, String b) {    
 					return histogram.get(b) - histogram.get(a);  
-				}  
-			});    
+				}
+			});
 
 			for (String s: arr) {
 				System.out.println(s + ": " + histogram.get(s));  
