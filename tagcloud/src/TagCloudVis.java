@@ -1,3 +1,5 @@
+import java.awt.Color;
+import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import javax.swing.*;
 
@@ -123,6 +125,7 @@ public class TagCloudVis extends JPanel {
         /* Create, put, and run the action list for the layout */
         ActionList layout = new ActionList();
         SpecifiedLayout grid = new SpecifiedLayout("table","xpos","ypos");
+        
         layout.add(grid);
         layout.add(new RepaintAction());
         

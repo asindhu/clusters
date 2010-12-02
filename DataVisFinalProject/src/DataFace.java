@@ -46,6 +46,7 @@ public class DataFace {
 	public static Map<String, Integer> getTopics(String feeling, int num) {
 		generateXMLFile("&feeling=" + feeling);
 		NodeList list = getNodeListFromXMLFile(xmlfile);
+		
 		Map<String, Integer> Topics = getTopicsFromNodeList(list);
 		if (num != -1) Topics = getTopNum(Topics, num);
 		return Topics;
@@ -202,12 +203,13 @@ public class DataFace {
 	/* Generates a histogram for "topics" */
 	private static Map<String, Integer> getTopicsFromNodeList(NodeList list) {
 		Map<String, Integer> histogram = new HashMap<String, Integer>();
-		
 		int total = 0;
 		for (int s = 0; s < list.getLength(); s++) {
 			Element element = (Element) list.item(s);
 			String sentence = element.getAttribute("sentence");
 			StringTokenizer tokenizer = new StringTokenizer(sentence);
+
+			
 
 			while (tokenizer.hasMoreTokens()) {
 				String word = tokenizer.nextToken();
@@ -429,7 +431,7 @@ public class DataFace {
 			out.close();
 		}
 		
-		private static void writeTopicsToCSV(Map<String, Integer> topics, String filename) throws IOException {
+		public static void writeTopicsToCSV(Map<String, Integer> topics, String filename) throws IOException {
 			FileWriter fstream = new FileWriter(filename);
 	        BufferedWriter out = new BufferedWriter(fstream);
 			
@@ -481,9 +483,10 @@ public class DataFace {
 //		Map<String, Double> factors = getUniqueFeelings(counts);
 //		getTopFactors(factors, 10);
 		
+		/* 
 		Map<String, Integer> topics = getTopics("angry", 24);
 		writeTopicsToXML(topics, "../data/data.xml");
-		writeTopicsToCSV(topics, "../data/data.csv");
+		writeTopicsToCSV(topics, "../data/data.csv");*/
 		
 	}
 	
