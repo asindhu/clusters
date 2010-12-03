@@ -3,6 +3,8 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.io.IOException;
 import java.util.Map;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 import javax.swing.*;
 
@@ -13,6 +15,8 @@ import prefuse.action.RepaintAction;
 import prefuse.action.assignment.ColorAction;
 import prefuse.action.assignment.DataSizeAction;
 import prefuse.action.layout.SpecifiedLayout;
+import prefuse.controls.Control;
+import prefuse.controls.ControlAdapter;
 import prefuse.data.Table;
 import prefuse.data.io.CSVTableReader;
 import prefuse.render.DefaultRendererFactory;
@@ -99,7 +103,6 @@ public class TagCloud {
 		initDisplay();
 	}
 	
-
 	private void loadData() {
 		table = null;
 		try {
@@ -128,7 +131,6 @@ public class TagCloud {
 	
 	private void buildVis() {
 		vt = vis.addTable("table", table);
-		
 		r = new LabelRenderer("word");
         vis.setRendererFactory(new DefaultRendererFactory(r));
         
@@ -139,7 +141,7 @@ public class TagCloud {
 	
 	private void initDisplay() {
         display.setSize(width_bounds, height_bounds);
-        display.setBackground(Color.WHITE);
+        display.setBackground(Color.BLACK);
         
         /* Position the tag cloud in the center of the bounds */
         double x_ofs = (width_bounds - width)/2;
@@ -148,12 +150,29 @@ public class TagCloud {
 	}
 	
 	private void buildColors() {
-		text = new ColorAction("table", VisualItem.TEXTCOLOR, ColorLib.gray(0));
+		text = new ColorAction("table", VisualItem.TEXTCOLOR, ColorLib.rgb(237, 24, 83));
         
         /* Create, put, and run the action list for the colors */
         color = new ActionList();
         color.add(text);
         vis.putAction("color", color);
+        
+        Control hoverc = new ControlAdapter() {
+
+        	public void itemEntered(VisualItem item, MouseEvent evt) {
+        		item.setTextColor(ColorLib.rgb(255, 255, 255));
+        		item.getVisualization().repaint();
+
+        	}
+
+        	public void itemExited(VisualItem item, MouseEvent evt) {
+        		item.setTextColor(item.getEndTextColor());
+        		item.getVisualization().repaint();
+
+        	}
+        };
+        
+        display.addControlListener(hoverc);
         
         vis.run("color");
 	}

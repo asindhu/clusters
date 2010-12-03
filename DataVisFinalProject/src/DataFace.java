@@ -384,10 +384,10 @@ public class DataFace {
 		}
 
 /* ****************************************************************************************************** */
-// Write to file functions
+// Tag cloud file building functions
 /* ****************************************************************************************************** */
 
-		private static void writeTopicsToXML(Map<String, Integer> topics, String filename) throws IOException {
+		public static void writeTopicsToXML(Map<String, Integer> topics, String filename) throws IOException {
 			FileWriter fstream = new FileWriter(filename);
 	        BufferedWriter out = new BufferedWriter(fstream);
 			
@@ -432,24 +432,51 @@ public class DataFace {
 		}
 		
 		public static void writeTopicsToCSV(Map<String, Integer> topics, String filename) throws IOException {
+			ArrayList<String> keys = new ArrayList<String>(topics.keySet());
+			ArrayList<Integer> weights = new ArrayList<Integer>();
+			
+			String topic;
+			double weight;
+	        double max_weight = 0;
+			
+			/* Iterate through the entries and set the weights */
+			for (int i = 0; i < keys.size(); i++) {
+	        	topic = keys.get(i);
+	        	
+	        	/* Exponentially weight the sizes */
+	        	weight = Math.pow(topics.get(topic), 1.5);
+	        	
+	        	/* Add the weight to the ArrayList */
+	        	weights.add((int)weight);
+	        	
+	        	/* Set max */
+	        	if (weight > max_weight) max_weight = weight;
+			}
+			
+			/* Normalize the weights */
+			for (int i = 0; i < weights.size(); i++) {
+				weight = weights.get(i);
+				
+				weight = weight * (100/max_weight);
+				
+				weights.set(i, (int)weight);
+			}
+			
+			/* Write to file */
 			FileWriter fstream = new FileWriter(filename);
 	        BufferedWriter out = new BufferedWriter(fstream);
 			
 	        /* Write CSV header */
 	        out.write("word,weight\n");
 	        
-			/* Write each table entry into the XML file */
-			ArrayList<String> keys = new ArrayList<String>(topics.keySet());
-	        String topic;
-	        int weight;
-	        
+	        int int_weight;
+			
 			for (int i = 0; i < keys.size(); i++) {
-	        	topic = keys.get(i);
-	        	weight = topics.get(topic);
-	        	
-	        	/* Create entry */
-				out.write(topic + "," + weight + "\n");
-
+				topic = keys.get(i);
+				int_weight = weights.get(i);
+				
+				/* Write to file */
+				out.write(topic + "," + int_weight + "\n");
 			}
 			
 			out.close();
@@ -483,10 +510,10 @@ public class DataFace {
 //		Map<String, Double> factors = getUniqueFeelings(counts);
 //		getTopFactors(factors, 10);
 		
-		/* 
+		
 		Map<String, Integer> topics = getTopics("angry", 24);
-		writeTopicsToXML(topics, "../data/data.xml");
-		writeTopicsToCSV(topics, "../data/data.csv");*/
+		/*writeTopicsToXML(topics, "../data/data.xml");*/
+		writeTopicsToCSV(topics, "../data/data.csv");
 		
 	}
 	
