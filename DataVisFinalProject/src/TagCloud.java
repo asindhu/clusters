@@ -17,6 +17,7 @@ import prefuse.action.assignment.DataSizeAction;
 import prefuse.action.layout.SpecifiedLayout;
 import prefuse.controls.Control;
 import prefuse.controls.ControlAdapter;
+import prefuse.controls.PanControl;
 import prefuse.data.Table;
 import prefuse.data.io.CSVTableReader;
 import prefuse.render.DefaultRendererFactory;
@@ -44,17 +45,19 @@ public class TagCloud {
 	
 	private String feeling;
 	private int cols;
+	private int rows;
 	private int numTags;
 	private int width_bounds;
 	private int height_bounds;
 	private int graph_height;
+	private double size_factor = 12;
 	
-	private double width;
-	private double height;
+	private double tagvis_width;
+	private double tagvis_height;
 
 	/* Constants */
-	private final int vspace = 20;
-	private final int hspace = 20;
+	private final int vspace = 25;
+	private final int hspace = 10;
 	private final String filepath = "../data/data.csv";
 	
 	
@@ -62,9 +65,12 @@ public class TagCloud {
 	public TagCloud(int vis_width, int vis_height, int cols, int rows, String feeling) {
 		this.cols = cols;
 		width_bounds = vis_width;
+		
+		/* The extra room past the square for the tree is used for the tag cloud */
 		height_bounds = vis_height - vis_width;
 		graph_height = vis_width;
 		numTags = cols * rows;
+		this.rows = rows;
 	
 		/* Initialize the visualization with the provided feeling */
 		visInit(feeling);
@@ -80,6 +86,7 @@ public class TagCloud {
 		
 		visRebuild();
 	}
+	
 	
 	private void buildDataFile(String feeling) {
 		Map<String, Integer> topics = DataFace.getTopics(feeling, numTags);
@@ -100,8 +107,17 @@ public class TagCloud {
 		loadData();
 		
 		buildVis();
+		scale();
 		initDisplay();
 	}
+	
+	private void scale() {
+		while (tagvis_width > width_bounds) {
+			size_factor -= 0.5;
+			visRebuild();
+		}
+	}
+	
 	
 	private void loadData() {
 		table = null;
@@ -125,9 +141,10 @@ public class TagCloud {
 		vis.repaint();
 		
 		/* Recenter the display */
-		recenterDisplay();
+		centerDisplay();
 		
     }
+	
 	
 	private void buildVis() {
 		vt = vis.addTable("table", table);
@@ -136,18 +153,21 @@ public class TagCloud {
         
         buildColors();
         buildSizes();
+        initLayout();
         buildLayout();
+        setLayout();
 	}
+	
 	
 	private void initDisplay() {
         display.setSize(width_bounds, height_bounds);
         display.setBackground(Color.BLACK);
         
         /* Position the tag cloud in the center of the bounds */
-        double x_ofs = (width_bounds - width)/2;
-        double y_ofs = graph_height + (height_bounds - height)/2;
-        display.pan(x_ofs, y_ofs);
+        centerDisplay();
+
 	}
+	
 	
 	private void buildColors() {
 		text = new ColorAction("table", VisualItem.TEXTCOLOR, ColorLib.rgb(237, 24, 83));
@@ -179,69 +199,88 @@ public class TagCloud {
 	
 	private void buildSizes() {
 		size = new DataSizeAction("table", "weight");
-        vis.putAction("size", size);
+        size.setMaximumSize(size_factor);
+		
+		vis.putAction("size", size);
 		
 		/* Run the size action list */
 		vis.run("size");
-	}
+	}	
+
 	
-	private void buildLayout() {
-	
+	private void initLayout() {
 		/* Add columns to the table for the x and y position of each label */
 		vt.addColumn("xpos", double.class);
         vt.addColumn("ypos", double.class);
         
+        buildLayout();
+	}
+	
+	private void buildLayout() {
+		
+        
+        /* Sum the widths of all words and divide by the number of rows to get
+         * a lower bound for the width of each row.
+         */
+        
         IntIterator iter = vt.rows();
-        int table_row, vis_row, i=0;
+        double total_width = hspace, width, avg_width;
+        int table_row;
         VisualItem item;
         Rectangle2D rect;
-        double xpos = 0, width, last_width = 0;
         
-        double row_width;
-        this.width = 0;
-        
-        /* Iterate over the table items and calculate the x and
-         * y values for each label.
-         */
         while (iter.hasNext()) {
-        	/* The row in the backing table corresponding to the current data item */
         	table_row = iter.nextInt();
-        	
-        	/* The row index in the actual visualization */
-        	vis_row = i / cols;
-        	
-        	/* Calculate the width of the current label and the new y position */
         	item = vt.getItem(table_row);        	
         	rect = item.getBounds();
         	width = rect.getWidth();
-        	xpos += last_width / 2 + width / 2 + hspace;
-        		
+        	
+        	total_width = total_width + width + hspace;
+        }
+        
+        avg_width = total_width/rows;
+                
+        /* Now calculate the x and y position of each word in the layout */
+        iter = vt.rows();
+        double xpos = 0, ypos = 0, max_row_width = 0, row_width, last_width = 0;
+        int row_index = 0;
+        
+        while (iter.hasNext()) {
+        	table_row = iter.nextInt();
+        	item = vt.getItem(table_row);        	
+        	rect = item.getBounds();
+        	width = rect.getWidth();
+        	
+        	/* Advance the x position */
+        	xpos = xpos + width/2 + hspace + last_width/2;
+        	
         	/* Set the x and y position of the label */
         	vt.set(table_row, "xpos", xpos);
-        	vt.set(table_row, "ypos", vis_row * vspace);        	
+        	vt.set(table_row, "ypos", ypos);
         	
-        	/* Save the last label width for next time */
-        	last_width = rect.getWidth();
+        	last_width = width;
         	
-        	/* When we are at the end of a row in the visualization, reset horizontal positioning */
-        	if ((i+1) % cols == 0) {
-        		/* Save the maximum width if necessary */
-        		row_width = xpos + last_width;
-        		
-        		//System.out.println("row width = " + row_width);
-        		
-        		if (row_width > this.width) this.width = row_width;
-        		
+        	/* If the new x position is over the avg row width,
+        	 * we reset to a new row.
+        	 */
+        	
+        	if (xpos > avg_width) {
+        		/* Set max row width */
+        		row_width = xpos + width/2 + hspace;
+        		if (row_width > max_row_width) max_row_width = row_width;
+        		row_index++;
         		xpos = 0;
         		last_width = 0;
+        		ypos = row_index * vspace;
         	}
-        	
-        	i++;
         }
-        this.height = vspace * (numTags / cols);
         
-        
-        /* Create, put, and run the action list for the layout */
+        this.tagvis_height = vspace * rows;
+        this.tagvis_width = max_row_width;
+	}
+	
+	private void setLayout() {
+		/* Create, put, and run the action list for the layout */
         layout = new ActionList();
         grid = new SpecifiedLayout("table","xpos","ypos");
         
@@ -252,22 +291,18 @@ public class TagCloud {
         vis.run("layout");
 	}
 	
-	private void recenterDisplay() {
+	
+	private void centerDisplay() {
 		/* Get current x,y coordinate of display */
 		double curX = display.getDisplayX() * -1;
 		double curY = display.getDisplayY() * -1;
-		
-		double newX = (width_bounds - width)/2;
-		double newY = graph_height + (height_bounds - height)/2;
+				
+		double newX = (width_bounds - tagvis_width)/2;
+		double newY = graph_height + (height_bounds - tagvis_height)/2;
 		
 		double x_ofs = newX - curX;
 		double y_ofs = newY - curY;
-		
-		/*
-		System.out.println("cur x = " + curX + ", cur y = " + curY);
-		System.out.println("new x = " + newX + ", new y = " + newY);
-		System.out.println("x offset = " + x_ofs + ", y offset = " + y_ofs); */ 
-		
+				
 		display.pan(x_ofs, y_ofs);
 	}
 

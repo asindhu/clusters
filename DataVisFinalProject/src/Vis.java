@@ -37,17 +37,6 @@ public class Vis extends JPanel {
 		setupGraphVis();
         setupTagVis();
         setFrame();
-        
-        try {
-        	Thread.currentThread();
-        	Thread.sleep(1000);
-        }
-        catch(InterruptedException ie) {
-
-        }
-        
-        tagcloud.setFeeling("disappointed");
-        
     }
 	
 	
@@ -71,7 +60,7 @@ public class Vis extends JPanel {
 	
 	/* Set up the tag visualization */
 	private static void setupTagVis() {
-		TagCloud tagcloud = new TagCloud(vis_width, vis_height, 8, 3, "angry");
+		TagCloud tagcloud = new TagCloud(vis_width, vis_height, 8, 3, "resentful");
 		Vis.tagcloud = tagcloud;
 	}
 	

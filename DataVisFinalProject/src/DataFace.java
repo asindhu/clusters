@@ -8,8 +8,20 @@ import org.xml.sax.SAXException;
 
 public class DataFace {
 	
-	private static final int QUERY_SIZE = 5000;
+	/* TODO: we MUST do a check inside the "getTopics" method or any other method that relies on pulling
+	 * a feeling query. The API does not check whether the provided feeling is valid or not, so we have
+	 * to check whether the provided feeling is valid and is on the list.
+	 */
+	
+	private static final int QUERY_SIZE = 15000;
 	private static final String xmlfile = "output.xml";
+	
+	/* Factor by which tag cloud weights are normalized */
+	private static final int normal_factor = 5;
+	
+	/* Exponential factor for tag cloud weights */
+	private static final double exp_factor = 1;
+	
 	private static Set<String> stopwords;
 	private static Set<String> stopfeelings;
 	private static Map<String, Double> benchmarkFeelings;
@@ -437,30 +449,31 @@ public class DataFace {
 			
 			String topic;
 			double weight;
-	        double max_weight = 0;
+	        double max_weight, min_weight;
 			
 			/* Iterate through the entries and set the weights */
 			for (int i = 0; i < keys.size(); i++) {
 	        	topic = keys.get(i);
 	        	
 	        	/* Exponentially weight the sizes */
-	        	weight = Math.pow(topics.get(topic), 1.5);
+	        	//weight = Math.pow(topics.get(topic), exp_factor);
 	        	
 	        	/* Add the weight to the ArrayList */
-	        	weights.add((int)weight);
-	        	
-	        	/* Set max */
-	        	if (weight > max_weight) max_weight = weight;
+	        	weights.add((int)topics.get(topic));
+
 			}
 			
-			/* Normalize the weights */
-			for (int i = 0; i < weights.size(); i++) {
+			/* Get max weight */
+			max_weight = Collections.max(weights);
+			
+			/* Normalize the weights to a range between 1 and normal_factor */
+			/*for (int i = 0; i < weights.size(); i++) {
 				weight = weights.get(i);
 				
-				weight = weight * (100/max_weight);
+				weight = weight * (normal_factor/max_weight);
 				
 				weights.set(i, (int)weight);
-			}
+			}*/
 			
 			/* Write to file */
 			FileWriter fstream = new FileWriter(filename);
@@ -474,6 +487,9 @@ public class DataFace {
 			for (int i = 0; i < keys.size(); i++) {
 				topic = keys.get(i);
 				int_weight = weights.get(i);
+				
+				/* Rectify any zero values */
+				if (int_weight == 0) int_weight = 1;
 				
 				/* Write to file */
 				out.write(topic + "," + int_weight + "\n");
