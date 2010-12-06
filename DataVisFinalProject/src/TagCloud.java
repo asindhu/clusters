@@ -1,11 +1,15 @@
 import java.awt.Color;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Map;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-
+import java.util.*;
 import javax.swing.*;
 
 import prefuse.Display;
@@ -43,6 +47,7 @@ public class TagCloud {
 	private ActionList layout;
 	private SpecifiedLayout grid;
 	
+	/* Instance variables */
 	private String feeling;
 	private int cols;
 	private int rows;
@@ -50,101 +55,90 @@ public class TagCloud {
 	private int width_bounds;
 	private int height_bounds;
 	private int graph_height;
-	private double size_factor = 12;
+	
 	
 	private double tagvis_width;
 	private double tagvis_height;
 
 	/* Constants */
-	private final int vspace = 25;
-	private final int hspace = 10;
-	private final String filepath = "../data/data.csv";
+	private double SIZE_FACTOR = 12;
+	private static final int VSPACE = 25;
+	private static final int HSPACE = 10;
+	private static final String FILEPATH = "../data/data.csv";
 	
 	
 	/* Constructor */
-	public TagCloud(int vis_width, int vis_height, int cols, int rows, String feeling) {
+	public TagCloud(String feeling, int width_bounds, int height_bounds, int cols, int rows) {
+		this.feeling = feeling;
+		this.width_bounds = width_bounds;
+		this.graph_height = width_bounds;
+		this.height_bounds = height_bounds - graph_height;
 		this.cols = cols;
-		width_bounds = vis_width;
-		
-		/* The extra room past the square for the tree is used for the tag cloud */
-		height_bounds = vis_height - vis_width;
-		graph_height = vis_width;
-		numTags = cols * rows;
 		this.rows = rows;
-	
-		/* Initialize the visualization with the provided feeling */
-		visInit(feeling);
-		
+		this.numTags = cols * rows;
+		visInit();		
 	}
 	
-	
+	/* Public method to change the "feeling" for the tagcloud */
 	public void setFeeling(String feeling) {
 		this.feeling = feeling;
-		
-		buildDataFile(feeling);
+		buildDataFile();
 		loadData();
-		
 		visRebuild();
 	}
 	
-	
-	private void buildDataFile(String feeling) {
-		Map<String, Integer> topics = DataFace.getTopics(feeling, numTags);
-		
-		try {
-			DataFace.writeTopicsToCSV(topics, filepath);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	private void visInit(String feeling) {
+	/* Initialize the visualization with the provided feeling */
+	private void visInit() {
 		vis = new Visualization();
 		display = new Display(vis);
-		
-		this.feeling = feeling;
-		buildDataFile(feeling);
+	
+		buildDataFile();
 		loadData();
-		
 		buildVis();
 		scale();
 		initDisplay();
 	}
 	
-	private void scale() {
-		while (tagvis_width > width_bounds) {
-			size_factor -= 0.5;
-			visRebuild();
-		}
+	private void buildDataFile() {
+		Map<String, Double> topics = Database.getTopics(feeling, numTags);
+		
+		try {
+			writeTopicsToCSV(topics, FILEPATH);
+		} catch (IOException e) {e.printStackTrace();}
 	}
 	
-	
+
 	private void loadData() {
 		table = null;
 		try {
-			table = new CSVTableReader().readTable(filepath);
+			table = new CSVTableReader().readTable(FILEPATH);
         } catch (Exception e) {
             e.printStackTrace();
             System.exit(1);
         }
+	}	
+
+	
+	private void scale() {
+		while (tagvis_width > width_bounds) {
+			SIZE_FACTOR -= 0.5;
+		}
+		visRebuild();
 	}
 	
+	
 	private void visRebuild() {
-		
-		/* Reset the visualization */
-		vis.reset();
-		display.removeAll();
-        
+		vis.reset();		//Reset the visualization
+		display.removeAll();    
 		buildVis();
-        
-		/* Reload all actions */
-		vis.repaint();
-		
-		/* Recenter the display */
-		centerDisplay();
-		
+		vis.repaint();		//Reload all actions
+		centerDisplay(); 	//Recenter the display
     }
 	
+	
+/* ****************************************************************************************************** */
+// Sets up parameters for the visualization	
+/* ****************************************************************************************************** */
 	
 	private void buildVis() {
 		vt = vis.addTable("table", table);
@@ -162,10 +156,7 @@ public class TagCloud {
 	private void initDisplay() {
         display.setSize(width_bounds, height_bounds);
         display.setBackground(Color.BLACK);
-        
-        /* Position the tag cloud in the center of the bounds */
         centerDisplay();
-
 	}
 	
 	
@@ -199,32 +190,30 @@ public class TagCloud {
 	
 	private void buildSizes() {
 		size = new DataSizeAction("table", "weight");
-        size.setMaximumSize(size_factor);
-		
+        size.setMaximumSize(SIZE_FACTOR);
 		vis.putAction("size", size);
-		
-		/* Run the size action list */
-		vis.run("size");
+		vis.run("size");  // Run the size action list
 	}	
-
+	
 	
 	private void initLayout() {
 		/* Add columns to the table for the x and y position of each label */
 		vt.addColumn("xpos", double.class);
         vt.addColumn("ypos", double.class);
-        
         buildLayout();
 	}
 	
-	private void buildLayout() {
-		
-        
+/* ****************************************************************************************************** */
+// Generates Layout for the Visualization	
+/* ****************************************************************************************************** */
+	
+	private void buildLayout() {  
         /* Sum the widths of all words and divide by the number of rows to get
          * a lower bound for the width of each row.
          */
         
         IntIterator iter = vt.rows();
-        double total_width = hspace, width, avg_width;
+        double total_width = HSPACE, width, avg_width;
         int table_row;
         VisualItem item;
         Rectangle2D rect;
@@ -235,7 +224,7 @@ public class TagCloud {
         	rect = item.getBounds();
         	width = rect.getWidth();
         	
-        	total_width = total_width + width + hspace;
+        	total_width = total_width + width + HSPACE;
         }
         
         avg_width = total_width/rows;
@@ -252,7 +241,7 @@ public class TagCloud {
         	width = rect.getWidth();
         	
         	/* Advance the x position */
-        	xpos = xpos + width/2 + hspace + last_width/2;
+        	xpos = xpos + width/2 + HSPACE + last_width/2;
         	
         	/* Set the x and y position of the label */
         	vt.set(table_row, "xpos", xpos);
@@ -266,16 +255,16 @@ public class TagCloud {
         	
         	if (xpos > avg_width) {
         		/* Set max row width */
-        		row_width = xpos + width/2 + hspace;
+        		row_width = xpos + width/2 + HSPACE;
         		if (row_width > max_row_width) max_row_width = row_width;
         		row_index++;
         		xpos = 0;
         		last_width = 0;
-        		ypos = row_index * vspace;
+        		ypos = row_index * VSPACE;
         	}
         }
         
-        this.tagvis_height = vspace * rows;
+        this.tagvis_height = VSPACE * rows;
         this.tagvis_width = max_row_width;
 	}
 	
@@ -307,4 +296,22 @@ public class TagCloud {
 	}
 
 
+/* ****************************************************************************************************** */
+// Tag cloud file building functions
+/* ****************************************************************************************************** */
+		
+		public static void writeTopicsToCSV(Map<String, Double> topics, String filename) throws IOException {
+			FileWriter fstream = new FileWriter(filename);
+	        BufferedWriter out = new BufferedWriter(fstream);
+			
+	        out.write("word,weight\n");  //CSV header
+	        Set<String> keys = topics.keySet();
+			for (String key: keys) {
+				int weight = (int)((double) topics.get(key));
+				if (weight == 0) weight = 1;   //Rectify any zero values
+				weight = (int)(Math.log1p(weight)*100);  //Exponential Weighting
+				out.write(key + "," + weight + "\n");
+			}
+			out.close();
+		}
 }

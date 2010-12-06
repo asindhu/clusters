@@ -33,22 +33,11 @@ public class Vis extends JPanel {
 	private static final int vis_height = 720;
 	
 	public static void main(String[] args) {
-        DataFace.init();
+        Database.init();
 		setupGraphVis();
         setupTagVis();
         setFrame();
     }
-	
-	
-	private static void setFrame() {
-		frame = new JFrame("C l u s t e r f * c k");
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.add(feelingsgraph.display);
-		frame.add(tagcloud.display);
-		frame.pack(); 
-		frame.setSize(vis_width, vis_height);
-		frame.setVisible(true); 
-	}
 	
 	
 	/* Set up the graph visualization */
@@ -60,10 +49,19 @@ public class Vis extends JPanel {
 	
 	/* Set up the tag visualization */
 	private static void setupTagVis() {
-		TagCloud tagcloud = new TagCloud(vis_width, vis_height, 8, 3, "resentful");
+		TagCloud tagcloud = new TagCloud("dumb", vis_width, vis_height, 8, 3);
 		Vis.tagcloud = tagcloud;
 	}
 	
-	
+	/* Combine the graph and tagcloud togethers */
+	private static void setFrame() {
+		frame = new JFrame("M I X E D F E E L I N G S");
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.add(feelingsgraph.display);
+		frame.add(tagcloud.display);
+		frame.pack(); 
+		frame.setSize(vis_width, vis_height);
+		frame.setVisible(true); 
+	}
 	
 }

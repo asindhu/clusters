@@ -1,7 +1,5 @@
 import java.awt.Color;
-
-import prefuse.Display;
-import prefuse.Visualization;
+import prefuse.*;
 
 
 public class FeelingsGraph {
@@ -16,13 +14,11 @@ public class FeelingsGraph {
 	private int width;
 	private int height;
 	
+	
 	/* Constructor */
 	public FeelingsGraph(int vis_width) {
-		
-		/* The graph itself is a square of dimension "vis_width" */
 		width = vis_width;
-		height = vis_width;
-		
+		height = vis_width;  //The graph itself is a square of dimension "vis_width"
 		graphVisInit();
 		setGraphDisplay();
 	}

@@ -13,7 +13,7 @@ public class DataFace {
 	 * to check whether the provided feeling is valid and is on the list.
 	 */
 	
-	private static final int QUERY_SIZE = 15000;
+	private static final int QUERY_SIZE = 1000;
 	private static final String xmlfile = "output.xml";
 	
 	/* Factor by which tag cloud weights are normalized */
