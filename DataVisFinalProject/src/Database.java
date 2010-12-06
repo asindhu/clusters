@@ -12,7 +12,7 @@ public class Database {
 	
 	/* Instance Variables */
 	private static final int QUERY_SIZE = 10000;
-	private static final int THRESHOLD = 100;
+	private static final int THRESHOLD = 25;
 	private static final String XMLFILE = "output.xml";	
 	private static Set<String> stopwords;
 	private static Map<String, Double> benchmarkFeelings;
@@ -35,7 +35,11 @@ public class Database {
 		NodeList nodelist = getNodeListFromXMLFile(XMLFILE);	
 		Map<String, Integer> histogram = getHistogram(nodelist, benchmark);
 		Map<String, Double> factors = getFactors(histogram, benchmark);
-		if (filter) removeStopwords(factors, benchmark);
+		if (filter) {
+			removeStopwords(factors, benchmark);
+		} else {
+			factors.remove(feeling);
+		}
 		if (num != -1) factors = getTopFactors(factors, num);
 		return factors;
 	}
@@ -109,7 +113,7 @@ public class Database {
 		ArrayList<String> arr = new ArrayList<String>(histogram.keySet());
 		Collections.sort(arr, new Comparator<String>() {  
 			public int compare(String a, String b) {    
-				return (int) (histogram.get(b) - histogram.get(a));  
+				return (int) ((histogram.get(b) - histogram.get(a))*100000);  
 			}  
 		});  
 		
@@ -213,17 +217,36 @@ public class Database {
 		catch (ParserConfigurationException e) {e.printStackTrace();}
 		return null;
 	}
+	
+	
+	private static void writeXMLFileForGraph(String feeling, Map<String, Double> histogram, String filename) {
+		try {
+			FileWriter fstream = new FileWriter(filename);
+	        BufferedWriter out = new BufferedWriter(fstream);
+	        
+	        out.write("<?xml version='1.0' encoding='UTF-8'?>\n");
+	        out.write("<feelingpairs>\n");
+	        Set<String> keys = histogram.keySet();
+	        for (String key: keys) {
+	        	out.write("<feelingpair feeling='"+ feeling +"' feeling2='"+ key +"'  freq='"+ histogram.get(key) +"' ></feelingpair>\n");
+	        }
+	        out.write("</feelingpairs>\n");
+	        out.close();
+		}  
+		catch (IOException e) {e.printStackTrace();}
+	}
 
 
 /* ****************************************************************************************************** */
 // Testing Code
 /* ****************************************************************************************************** */	
 	
-//	public static void main(String [] args) {
-//		init();
-//		getTopics("thrilled", 15);
-//		System.out.println();
-//		getFeelings("upset", 15);
-//	}
+	public static void main(String [] args) {
+		init();
+		//getTopics("awake", 10);
+		//System.out.println();
+		Map<String, Double> results = getFeelings("wonderful", 20);
+		writeXMLFileForGraph("wonderful", results, "eddie.txt");
+	}
 	
 }
