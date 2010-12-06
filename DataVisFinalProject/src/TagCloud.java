@@ -79,6 +79,23 @@ public class TagCloud {
 		visInit();		
 	}
 	
+	public class visRebuilder extends Thread {
+		private String feeling;
+		public visRebuilder(String f) {
+			feeling = f;
+		}
+		
+		public void run() {
+			setFeeling(feeling);
+		}
+	}
+	
+	public void setFeelingThread(String feeling)
+	{
+		visRebuilder vr = new visRebuilder(feeling);
+		vr.start();
+	}
+	
 	/* Public method to change the "feeling" for the tagcloud */
 	public void setFeeling(String feeling) {
 		this.feeling = feeling;
