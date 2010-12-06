@@ -49,7 +49,7 @@ public class Vis extends JPanel {
 	
 	/* Set up the tag visualization */
 	private static void setupTagVis() {
-		TagCloud tagcloud = new TagCloud("dumb", vis_width, vis_height, 8, 3);
+		TagCloud tagcloud = new TagCloud("angry", vis_width, vis_height, 8, 3);
 		Vis.tagcloud = tagcloud;
 	}
 	

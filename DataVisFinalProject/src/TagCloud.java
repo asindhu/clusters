@@ -207,7 +207,7 @@ public class TagCloud {
 // Generates Layout for the Visualization	
 /* ****************************************************************************************************** */
 	
-	private void buildLayout() {  
+	private void buildLayout() {
         /* Sum the widths of all words and divide by the number of rows to get
          * a lower bound for the width of each row.
          */
