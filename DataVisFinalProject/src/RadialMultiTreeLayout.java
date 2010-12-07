@@ -1,8 +1,10 @@
 
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 
 import prefuse.action.layout.graph.TreeLayout;
@@ -30,6 +32,8 @@ public class RadialMultiTreeLayout extends TreeLayout {
     
     protected Point2D m_origin;
     protected NodeItem m_prevRoot;
+    
+    private Map<String,Integer> depthmap;
     
     /**
      * Creates a new RadialTreeLayout. Automatic scaling of the radius
@@ -117,6 +121,8 @@ public class RadialMultiTreeLayout extends TreeLayout {
         
         m_origin = getLayoutAnchor();
         NodeItem n = getLayoutRoot();
+        //System.out.println("root x,y : " + n.getX() + "," + n.getY());
+        //System.out.println("m_origin x,y : " + m_origin.getX() + "," + m_origin.getY());
         Params np = (Params)n.get(PARAMS);
         
         // calc relative widths and maximum tree depth
@@ -128,15 +134,19 @@ public class RadialMultiTreeLayout extends TreeLayout {
         if ( !m_setTheta ) calcAngularBounds(n);
         
         Set<NodeItem> placednodes = new HashSet<NodeItem>();
+        Set<NodeItem> outerouternodes = new HashSet<NodeItem>();
         Set<NodeItem> outernodes = new HashSet<NodeItem>();
+        
+        depthmap = new HashMap<String,Integer>();
         
         // perform the layout
         if ( m_maxDepth > 0 )
         {
+        	System.out.println("Laying out with " + n.getString("name") + " as root node");
         	n.setSize(1.0);
         	n.setString("shown","yes");
         	placednodes.add(n);
-            layout(n, m_radiusInc, m_theta1, m_theta2, placednodes, outernodes, 0);
+            layout(n, m_radiusInc, m_theta1, m_theta2, placednodes, outernodes, outerouternodes, 0);
             LiteralIterator nodeid_iter = g.nodeRows();
             while (nodeid_iter.hasNext())
             {
@@ -145,24 +155,42 @@ public class RadialMultiTreeLayout extends TreeLayout {
             	if (!placednodes.contains(nn))
             	{
             		setRectPolarLocation(nn, nn, 3*m_radiusInc, Math.random()*2*Math.PI);
-            		outernodes.add(nn);
+            		outerouternodes.add(nn);
+                    nn.setString("shown","no");
             	}
+                else
+                {
+                    nn.setString("shown","yes");
+                }
             }            
     		Iterator<Edge> edge_it = g.edges();
     		while (edge_it.hasNext())
-    			edge_it.next().setString("show", "yes");
-    		edge_it = g.edges(n);
+    			edge_it.next().setString("show", "no");
+    		edge_it = g.outEdges(n);
     		while (edge_it.hasNext())
     		{
     			edge_it.next().setString("show", "bold");
     		}
-            for (NodeItem nn : outernodes)
+    		for (NodeItem nn : outernodes)
+    		{
+        		edge_it = g.outEdges(nn);
+        		while (edge_it.hasNext())
+        		{
+        			Edge outer_edge = edge_it.next();
+        			if (!n.getString("name").equals(outer_edge.getTargetNode().getString("name")))
+        				outer_edge.setString("show", "yes");
+                    if (outernodes.contains(outer_edge.getTargetNode()) &&
+                            outernodes.contains(outer_edge.getSourceNode()))
+                        outer_edge.setString("show", "no");
+        		}
+    		}
+            /*for (NodeItem nn : outerouternodes)
             {
             	nn.setString("shown","no");
         		edge_it = g.edges(nn);
         		while (edge_it.hasNext())
         			edge_it.next().setString("show", "no");
-            }
+            }*/
         }
         
         // update properties of the root node
@@ -266,11 +294,12 @@ public class RadialMultiTreeLayout extends TreeLayout {
         if ( p != null ) {
             base = normalize(Math.atan2(p.getY()-n.getY(), p.getX()-n.getX()));
         }
-        int cc = n.getChildCount();
+        //int cc = n.getChildCount();
+        int cc = n.getOutDegree();
         if ( cc == 0 ) return null;
 
         NodeItem c = (NodeItem)n.getFirstChild();
-        
+                
         // TODO: this is hacky and will break when filtering
         // how to know that a branch is newly expanded?
         // is there an alternative property we should check?
@@ -289,7 +318,7 @@ public class RadialMultiTreeLayout extends TreeLayout {
         ArrayLib.sort(angle, idx);
         
         // return iterator over sorted children
-        return new Iterator() {
+        /*return new Iterator() {
             int cur = 0;
             public Object next() {
                 return n.getChild(idx[cur++]);
@@ -300,7 +329,8 @@ public class RadialMultiTreeLayout extends TreeLayout {
             public void remove() {
                 throw new UnsupportedOperationException();
             }
-        };
+        };*/
+        return n.outNeighbors();
     }
     
     /**
@@ -310,7 +340,9 @@ public class RadialMultiTreeLayout extends TreeLayout {
      * @param theta1 the start (in radians) of this subtree's angular region
      * @param theta2 the end (in radians) of this subtree's angular region
      */
-    protected void layout(NodeItem n, double r, double theta1, double theta2, Set<NodeItem> placednodes, Set<NodeItem> outernodes, int depth) {
+    protected void layout(NodeItem n, double r, double theta1, double theta2, 
+    		Set<NodeItem> placednodes, Set<NodeItem> outernodes, Set<NodeItem> outernodes2, int depth) {
+    	if (depth>1) return;
         double dtheta  = (theta2-theta1);
         double dtheta2 = dtheta / 2.0;
         double width = ((Params)n.get(PARAMS)).width;
@@ -318,35 +350,54 @@ public class RadialMultiTreeLayout extends TreeLayout {
         
         Graph g = (Graph)m_vis.getGroup(m_group);
         
-        Iterator childIter = sortedChildren(n);
+        Iterator childIter = n.outNeighbors();
+        //System.out.println("num children: " + n.getOutDegree());
         while ( childIter != null && childIter.hasNext() ) {
             NodeItem c = (NodeItem)childIter.next();
+            
+            //if (placednodes.contains(c))
+            //{
+            //    System.out.println("skipping already-placed node " + c.getString("name"));
+            //    continue;
+            //}
             placednodes.add(c);
             
-            
-            if (depth>=2)
+            if (depth==0)
+            {
             	outernodes.add(c);
+            	//System.out.println("outer ring : " + c.getString("name"));
+            }
+            if (depth>=2)
+            	outernodes2.add(c);
             else
             	c.setString("shown","yes");
             Params cp = (Params)c.get(PARAMS);
-            cfrac = cp.width / width;
+            //cfrac = cp.width / width;
+            cfrac = 1.0/n.getOutDegree();
             if ( c.isExpanded() && c.getChildCount()>0 ) {
-            	if (depth<2)
+            	if (depth<1)
             	{
             		layout(c, r+m_radiusInc, theta1 + nfrac*dtheta, 
-                                         theta1 + (nfrac+cfrac)*dtheta, placednodes, outernodes, depth+1);
-            		//g.getEdge(c, n).setString("show", "yes");
-            	}
-            	else
-            	{
-            		layout(c, r, 0, 2*MathLib.TWO_PI, placednodes, outernodes, depth+1);
-            		//g.getEdge(n, c).setString("show", "no");
+                             theta1 + (nfrac+cfrac)*dtheta, 
+                             placednodes, outernodes, outernodes2, depth+1);
             	}
             }
             if (depth<2)
-            	setPolarLocation(c, n, r, theta1 + nfrac*dtheta + cfrac*dtheta2);
-            else
-            	setRectPolarLocation(c, n, r, theta1 + nfrac*dtheta + cfrac*dtheta2);
+            {
+                if(!depthmap.containsKey(c.getString("name")))
+                {
+                    setPolarLocation(c, n, r, theta1 + nfrac*dtheta + cfrac*dtheta2);
+                    depthmap.put(c.getString("name"),depth);
+                }
+                else
+                {
+                    if (depthmap.get(c.getString("name"))>depth)
+                    {
+                        setPolarLocation(c, n, r, theta1 + nfrac*dtheta + cfrac*dtheta2);
+                        depthmap.put(c.getString("name"),depth);
+                    }
+                }
+            }
             cp.angle = cfrac*dtheta;
             nfrac += cfrac;
         }

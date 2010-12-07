@@ -43,16 +43,15 @@ public class Vis extends JPanel {
         setupTagVis();
 		setupGraphVis();
         setFrame();
+        
     }
 	
 	
 	/* Set up the graph visualization */
 	private static void setupGraphVis() {
 	    UILib.setPlatformLookAndFeel();
-	    
 		NodeList nl = feelingsgraph.getAssociatedFeelingsFromXMLFile("feel.xml");
-        Graph g2 = feelingsgraph.buildGraph(nl);
-        
+        Graph g2 = feelingsgraph.buildGraph(nl,"unsafe");
         feelingsgraph = new radialview(g2,"name");
         feelingsgraph.setMyTC(tagcloud);
         feelingsbox = radialview.buildBottomBox(feelingsgraph, feelingsgraph.getVisualization(), "name");
@@ -61,18 +60,19 @@ public class Vis extends JPanel {
 	
 	/* Set up the tag visualization */
 	private static void setupTagVis() {
-		TagCloud tagcloud = new TagCloud("blessed", vis_width, vis_height-130, 8, 3);
+		TagCloud tagcloud = new TagCloud("happy", vis_width, vis_height-185);
 		Vis.tagcloud = tagcloud;
 	}
 	
 	/* Combine the graph and tagcloud togethers */
 	private static void setFrame() {
-		frame = new JFrame("M I X E D F E E L I N G S");
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame = new JFrame("M I X E D  F E E L I N G S");
+		frame.add(feelingsbox, BorderLayout.NORTH);
 		frame.add(feelingsgraph);
 		frame.add(tagcloud.display);
-		frame.add(feelingsbox,BorderLayout.SOUTH);
+		
 		frame.pack(); 
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setSize(vis_width, vis_height);
 		frame.setVisible(true); 
 	}

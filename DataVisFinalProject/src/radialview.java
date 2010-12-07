@@ -1,5 +1,4 @@
-
-
+import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -45,6 +44,7 @@ import prefuse.action.animate.VisibilityAnimator;
 import prefuse.action.assignment.ColorAction;
 import prefuse.action.assignment.DataColorAction;
 import prefuse.action.assignment.FontAction;
+import prefuse.action.assignment.StrokeAction;
 import prefuse.action.layout.CollapsedSubtreeLayout;
 import prefuse.action.layout.graph.RadialTreeLayout;
 import prefuse.activity.SlowInSlowOutPacer;
@@ -99,6 +99,9 @@ public class radialview extends Display {
     private LabelRenderer m_nodeRenderer;
     private EdgeRenderer m_edgeRenderer;
     
+    public static NodeList feelings_database;
+    private static Map<String,Node> fnodes;
+    
     public static int palette[];
 
     public static TagCloud myTC;
@@ -124,7 +127,7 @@ public class radialview extends Display {
         m_nodeRenderer.setHorizontalPadding(3);
         m_nodeRenderer.setVerticalPadding(3);
         
-        m_edgeRenderer = new EdgeRenderer();
+        m_edgeRenderer = new EdgeRenderer(Constants.EDGE_TYPE_LINE,Constants.EDGE_ARROW_NONE);
         
         DefaultRendererFactory rf = new DefaultRendererFactory(m_nodeRenderer);
         rf.add(new InGroupPredicate(treeEdges), m_edgeRenderer);
@@ -138,6 +141,7 @@ public class radialview extends Display {
         m_vis.putAction("textColor", textColor);
         
         ItemAction edgeColor = new EdgeColorAction(treeEdges);
+        ItemAction edgeWeight = new EdgeStrokeAction(treeEdges);
         
         FontAction fonts = new FontAction(treeNodes, 
                 FontLib.getFont("Tahoma", 10));
@@ -180,10 +184,11 @@ public class radialview extends Display {
         filter.add(textColor);
         filter.add(nodeColor);
         filter.add(edgeColor);
+        filter.add(edgeWeight);
         m_vis.putAction("filter", filter);
         
         // animated transition
-        ActionList animate = new ActionList(1250);
+        ActionList animate = new ActionList(1500);
         animate.setPacingFunction(new SlowInSlowOutPacer());
         animate.add(new QualityControlAnimator());
         animate.add(new VisibilityAnimator(tree));
@@ -237,7 +242,6 @@ public class radialview extends Display {
 	}
 	
 	public static void main(String argv[]) {
-	    String infile = "feel.xml";
 	    String label = "name";
 	    
 	    
@@ -260,10 +264,10 @@ public class radialview extends Display {
         }*/
 	    
         
-		NodeList nl = getAssociatedFeelingsFromXMLFile("feel.xml");
+		feelings_database = getAssociatedFeelingsFromXMLFile("emotion_database.xml");
 		//System.out.println(nl.getLength());
         
-        Graph g2 = buildGraph(nl);
+        Graph g2 = buildGraph(feelings_database,"blessed");
         
         
 	    frame.setContentPane(radialpanel(g2,label));
@@ -285,8 +289,8 @@ public class radialview extends Display {
         
         panel.add(box, BorderLayout.SOUTH);
         
-        Color BACKGROUND = Color.WHITE;
-        Color FOREGROUND = Color.DARK_GRAY;
+        Color BACKGROUND = Color.BLACK;
+        Color FOREGROUND = Color.WHITE;
         UILib.setColor(panel, BACKGROUND, FOREGROUND);
         
         return panel;
@@ -342,14 +346,15 @@ public class radialview extends Display {
 		catch (ParserConfigurationException e) {e.printStackTrace();}
 		return null;
 	}
-	
-	public static Graph buildGraph(NodeList list) {
-		Graph g = new Graph();
+    
+    
+	public static Graph buildGraph(NodeList list, String root) {
+		Graph g = new Graph(true);
 		g.addColumn("name", String.class);
 		g.addColumn("shown", String.class);
 		g.addColumn("index", Integer.class);
 		g.getEdgeTable().addColumn("show", String.class);
-		Map<String, Node> nodes = new HashMap<String, Node>();
+		fnodes = new HashMap<String, Node>();
 		Set<String> feelings = new HashSet<String>();
 		
 		ArrayList<Integer> tmplette = new ArrayList<Integer>();
@@ -362,7 +367,7 @@ public class radialview extends Display {
         		Node n = g.addNode();
         		n.setString("name", feeling);
         		feelings.add(feeling);
-        		nodes.put(feeling, n);
+        		fnodes.put(feeling, n);
         		n.set("index", new Integer(tmplette.size()));
         		tmplette.add(getFeelingColor(feeling));
         	}
@@ -372,14 +377,14 @@ public class radialview extends Display {
         		Node n = g.addNode();
         		n.setString("name", feeling2);
         		feelings.add(feeling2);
-        		nodes.put(feeling2, n);
+        		fnodes.put(feeling2, n);
         		n.set("index", new Integer(tmplette.size()));
         		tmplette.add(getFeelingColor(feeling2));
         	}
         	//System.out.println("feeling: " + feeling + ", feeling2: " + feeling2);
-        	if (g.getEdge(nodes.get(feeling), nodes.get(feeling2))==null)
+        	if (g.getEdge(fnodes.get(feeling), fnodes.get(feeling2))==null)
         	{
-        		Edge ne = g.addEdge(nodes.get(feeling), nodes.get(feeling2));
+        		Edge ne = g.addEdge(fnodes.get(feeling), fnodes.get(feeling2));
      			ne.setString("show", "yes");
         	}
         }
@@ -437,6 +442,8 @@ public class radialview extends Display {
             if ( focus==null || focus.getTupleCount() == 0 ) return;
             
             Graph g = (Graph)m_vis.getGroup(m_group);
+            
+            
             Node f = null;
             @SuppressWarnings("rawtypes")
 			Iterator tuples = focus.tuples();
@@ -445,6 +452,8 @@ public class radialview extends Display {
                 f = null;
             }
             if ( f == null ) return;
+            
+            
             g.getSpanningTree(f);
             
             if (myTC!=null)
@@ -484,10 +493,17 @@ public class radialview extends Display {
 	
     public static class EdgeColorAction extends ColorAction {
         public EdgeColorAction(String group) {
-            super(group, VisualItem.STROKECOLOR, ColorLib.rgba(230,230,230,255));
+            super(group, VisualItem.STROKECOLOR, ColorLib.rgba(110,110,110,255));
             add(ExpressionParser.predicate("[show]=='no'"), ColorLib.rgba(0,0,0,0));
-            add(ExpressionParser.predicate("[show]=='bold'"), ColorLib.rgba(100,100,100,255));
+            add(ExpressionParser.predicate("[show]=='bold'"), ColorLib.rgba(237, 24, 83, 255));
         }
+    }
+    
+    public static class EdgeStrokeAction extends StrokeAction {
+    	public EdgeStrokeAction(String group) {
+    		super(group, new BasicStroke(1.0f));
+            add(ExpressionParser.predicate("[show]=='bold'"), new BasicStroke(2.0f));
+    	}
     }
     
 }

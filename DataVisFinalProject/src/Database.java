@@ -228,7 +228,29 @@ public class Database {
 	        out.write("<feelingpairs>\n");
 	        Set<String> keys = histogram.keySet();
 	        for (String key: keys) {
-	        	out.write("<feelingpair feeling='"+ feeling +"' feeling2='"+ key +"'  freq='"+ histogram.get(key) +"' ></feelingpair>\n");
+	        	out.write("<feelingpair feeling='"+ feeling +"' feeling2='"+ key +"'  freq='"+ histogram.get(key) +"'></feelingpair>\n");
+	        }
+	        out.write("</feelingpairs>\n");
+	        out.close();
+		}  
+		catch (IOException e) {e.printStackTrace();}
+	}
+	
+	private static void writeXMLFileForEmotionWeb(String filename) {
+		try {
+			FileWriter fstream = new FileWriter(filename);
+	        BufferedWriter out = new BufferedWriter(fstream);
+	        
+	        Set<String> feelings = benchmarkFeelings.keySet();
+	        out.write("<?xml version='1.0' encoding='UTF-8'?>\n");
+	        out.write("<feelingpairs>\n");
+	        
+	        for (String feeling: feelings) {
+	        	Map<String, Double> results = getFeelings(feeling, 8);
+	        	Set<String> links = results.keySet();
+	        	for (String link: links) {
+	        		out.write("<feelingpair feeling='"+ feeling +"' feeling2='"+ link +"'  freq='"+ results.get(link) +"'></feelingpair>\n");
+	        	}
 	        }
 	        out.write("</feelingpairs>\n");
 	        out.close();
@@ -241,12 +263,13 @@ public class Database {
 // Testing Code
 /* ****************************************************************************************************** */	
 	
-	public static void main(String [] args) {
-		init();
-		//getTopics("awake", 10);
-		//System.out.println();
-		Map<String, Double> results = getFeelings("wonderful", 20);
-		writeXMLFileForGraph("wonderful", results, "eddie.txt");
-	}
+//	public static void main(String [] args) {
+//		init();
+//		writeXMLFileForEmotionWeb("emotion_database.txt");
+//		getTopics("awake", 10);
+//		System.out.println();
+//		Map<String, Double> results = getFeelings("pissed", 10);
+//		writeXMLFileForGraph("wonderful", results, "eddie.txt");
+//	}
 	
 }
