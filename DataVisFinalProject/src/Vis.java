@@ -28,10 +28,9 @@ import prefuse.visual.VisualTable;
 public class Vis extends JPanel {
 
 	/* Displays */
-	private static TagCloudEddie tagcloud;
+	private static TagCloud tagcloud;
 	private static radialview feelingsgraph;
 	private static Box feelingsbox;
-	
 	private static JFrame frame;
 	
 	/* Constants */
@@ -40,7 +39,6 @@ public class Vis extends JPanel {
 	
 	public static void main(String[] args) {
         Database.init();
-        //setupTagVis();
 		setupGraphVis();
         setFrame();
     }
@@ -53,19 +51,8 @@ public class Vis extends JPanel {
         Graph g2 = feelingsgraph.buildGraph(nl,"unsafe");
         feelingsgraph = new radialview(g2,"name", true);
         feelingsgraph.setBackground(Color.WHITE);
-        //feelingsgraph.setForeg
-        //feelingsgraph.setMyTC(tagcloud);
         feelingsbox = radialview.buildBottomBox(feelingsgraph, feelingsgraph.getVisualization(), "name");
-        //feelingsbox.setBackground(Color.BLACK);
-        
 	}
-	
-	
-	/* Set up the tag visualization */
-//	private static void setupTagVis() {
-//		TagCloud tagcloud = new TagCloud("happy", vis_width, vis_height-185);
-//		Vis.tagcloud = tagcloud;
-//	}
 	
 	/* Combine the graph and tagcloud togethers */
 	private static void setFrame() {
@@ -73,18 +60,17 @@ public class Vis extends JPanel {
 		frame = new JFrame("M I X E D  F E E L I N G S");
 		frame.add(feelingsbox, BorderLayout.NORTH);
 		frame.add(feelingsgraph);
-		//frame.add(tagcloud.display);
-		//TagCloudEddie cloud = new TagCloudEddie(frame);
 		frame.setBackground(Color.BLACK);
 		
-		tagcloud = new TagCloudEddie(frame);
+		tagcloud = new TagCloud();
 		frame.add(tagcloud, BorderLayout.SOUTH);
 		
 		frame.pack(); 
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setSize(vis_width, vis_height);
 		frame.setVisible(true);
-		tagcloud.setFeeling("angry");
+		
+		tagcloud.setFeeling("excited");
 	}
 	
 	public static void changeTagCloud(String feeling) {
