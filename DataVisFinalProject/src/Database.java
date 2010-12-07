@@ -66,8 +66,8 @@ public class Database {
 //					word = word.substring(0, word.length() - 1);  //Accounts for normal plurals 
 //				}
 				
-				if (benchmark.keySet().contains(word)) {
-					if (histogram.containsKey(word)) {
+				if (benchmark.keySet().contains(word.toLowerCase())) {
+					if (histogram.containsKey(word.toLowerCase())) {
 						int count = histogram.get(word) + 1;
 						histogram.put(word, count);
 						total++;
