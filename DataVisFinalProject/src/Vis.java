@@ -28,7 +28,7 @@ import prefuse.visual.VisualTable;
 public class Vis extends JPanel {
 
 	/* Displays */
-	private static TagCloud tagcloud;
+	private static TagCloudEddie tagcloud;
 	private static radialview feelingsgraph;
 	private static Box feelingsbox;
 	
@@ -40,29 +40,32 @@ public class Vis extends JPanel {
 	
 	public static void main(String[] args) {
         Database.init();
-        setupTagVis();
+        //setupTagVis();
 		setupGraphVis();
         setFrame();
-        
     }
 	
 	
 	/* Set up the graph visualization */
 	private static void setupGraphVis() {
 	    UILib.setPlatformLookAndFeel();
-		NodeList nl = feelingsgraph.getAssociatedFeelingsFromXMLFile("feel.xml");
+		NodeList nl = feelingsgraph.getAssociatedFeelingsFromXMLFile("emotion_database.xml");
         Graph g2 = feelingsgraph.buildGraph(nl,"unsafe");
-        feelingsgraph = new radialview(g2,"name");
-        feelingsgraph.setMyTC(tagcloud);
+        feelingsgraph = new radialview(g2,"name", true);
+        feelingsgraph.setBackground(Color.WHITE);
+        //feelingsgraph.setForeg
+        //feelingsgraph.setMyTC(tagcloud);
         feelingsbox = radialview.buildBottomBox(feelingsgraph, feelingsgraph.getVisualization(), "name");
+        //feelingsbox.setBackground(Color.BLACK);
+        
 	}
 	
 	
 	/* Set up the tag visualization */
-	private static void setupTagVis() {
-		TagCloud tagcloud = new TagCloud("happy", vis_width, vis_height-185);
-		Vis.tagcloud = tagcloud;
-	}
+//	private static void setupTagVis() {
+//		TagCloud tagcloud = new TagCloud("happy", vis_width, vis_height-185);
+//		Vis.tagcloud = tagcloud;
+//	}
 	
 	/* Combine the graph and tagcloud togethers */
 	private static void setFrame() {
@@ -71,14 +74,21 @@ public class Vis extends JPanel {
 		frame.add(feelingsbox, BorderLayout.NORTH);
 		frame.add(feelingsgraph);
 		//frame.add(tagcloud.display);
+		//TagCloudEddie cloud = new TagCloudEddie(frame);
 		frame.setBackground(Color.BLACK);
-		TagCloudEddie temp = new TagCloudEddie(frame, "upset");
-		frame.add(temp, BorderLayout.SOUTH);
+		
+		tagcloud = new TagCloudEddie(frame);
+		frame.add(tagcloud, BorderLayout.SOUTH);
 		
 		frame.pack(); 
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setSize(vis_width, vis_height);
-		frame.setVisible(true); 
+		frame.setVisible(true);
+		tagcloud.setFeeling("angry");
+	}
+	
+	public static void changeTagCloud(String feeling) {
+		tagcloud.setFeeling(feeling);		
 	}
 	
 }

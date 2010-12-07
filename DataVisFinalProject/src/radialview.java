@@ -104,14 +104,12 @@ public class radialview extends Display {
     
     public static int palette[];
 
-    public static TagCloud myTC;
-    public static void setMyTC(TagCloud tc) {
-    	myTC = tc;
-    }
+    public static boolean hasFrame;
     
-	public radialview(Graph g, String label) {
+	public radialview(Graph g, String label, boolean frame) {
         super(new Visualization());
         colors_loaded = false;
+        hasFrame = frame;
  
         m_label = label;
         
@@ -277,7 +275,7 @@ public class radialview extends Display {
 	
     public static JPanel radialpanel(Graph g, final String label) {        
         // create a new radial tree view
-        final radialview gview = new radialview(g, label);
+        final radialview gview = new radialview(g, label, false);
         Visualization vis = gview.getVisualization();
         
 
@@ -306,11 +304,17 @@ public class radialview extends Display {
         search.setBorder(BorderFactory.createEmptyBorder(5,5,4,0));
         search.setFont(FontLib.getFont("Tahoma", Font.PLAIN, 11));
         
-        final JFastLabel title = new JFastLabel("Feelexplore");
+        search.setBackground(Color.BLACK);
+        search.setForeground(Color.WHITE);
+        
+        final JFastLabel title = new JFastLabel("M I X E D F E E L I N G S");
         title.setPreferredSize(new Dimension(350, 20));
         title.setVerticalAlignment(SwingConstants.BOTTOM);
         title.setBorder(BorderFactory.createEmptyBorder(3,0,0,0));
         title.setFont(FontLib.getFont("Tahoma", Font.PLAIN, 16));
+        
+        title.setBackground(Color.BLACK);
+        title.setForeground(new Color (237, 24, 83));
         
         gview.addControlListener(new ControlAdapter() {
             public void itemEntered(VisualItem item, MouseEvent e) {
@@ -328,6 +332,7 @@ public class radialview extends Display {
         box.add(Box.createHorizontalGlue());
         box.add(search);
         box.add(Box.createHorizontalStrut(3));
+        
         
         return box;
     }
@@ -456,9 +461,9 @@ public class radialview extends Display {
             
             g.getSpanningTree(f);
             
-            if (myTC!=null)
+            if (hasFrame)
             {
-            	myTC.setFeelingThread(f.getString("name"));
+            	Vis.changeTagCloud(f.getString("name"));
             }
         }
     }

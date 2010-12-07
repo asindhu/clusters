@@ -421,22 +421,22 @@ public class RadialMultiTreeLayout extends TreeLayout {
     	if (t>=0 && t<Math.PI/2.0)
     	{
     		setX(n, p, m_origin.getX() + r);
-    		setY(n, p, m_origin.getY() - r + 2*r*(2*t/Math.PI));
+    		setY(n, p, m_origin.getY() - 0.8*r + 0.8*2*r*(2*t/Math.PI));
     	}
     	if (t>=Math.PI/2.0 && t<Math.PI)
     	{
     		setX(n, p, m_origin.getX() + r - 2*r*(2*(t-Math.PI/2.0)/Math.PI));
-    		setY(n, p, m_origin.getY() + r);
+    		setY(n, p, m_origin.getY() + 0.8*r);
     	}
     	if (t>=Math.PI && t<3*Math.PI/2.0)
     	{
     		setX(n, p, m_origin.getX() - r);
-    		setY(n, p, m_origin.getY() + r - 2*r*(2*(t-Math.PI)/Math.PI));
+    		setY(n, p, m_origin.getY() + 0.8*r - 0.8*2*r*(2*(t-Math.PI)/Math.PI));
     	}
     	if (t>=3*Math.PI/2.0 && t<2.0*Math.PI)
     	{
     		setX(n, p, m_origin.getX() - r + 2*r*(2*(t-3*Math.PI/2.0)/Math.PI));
-    		setY(n, p, m_origin.getY() - r);
+    		setY(n, p, m_origin.getY() - 0.8*r);
     	}
     }
     

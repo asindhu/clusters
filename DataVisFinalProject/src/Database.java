@@ -12,7 +12,7 @@ public class Database {
 	
 	/* Instance Variables */
 	private static final int QUERY_SIZE = 10000;
-	private static final int THRESHOLD = 30;
+	private static final int THRESHOLD = 20;
 	private static final String XMLFILE = "output.xml";	
 	private static Set<String> stopwords;
 	private static Map<String, Double> benchmarkFeelings;
@@ -61,13 +61,9 @@ public class Database {
 			StringTokenizer tokenizer = new StringTokenizer(sentence);
 
 			while (tokenizer.hasMoreTokens()) {
-				String word = tokenizer.nextToken();
-//				if (word.charAt(word.length()-1) == 's') {
-//					word = word.substring(0, word.length() - 1);  //Accounts for normal plurals 
-//				}
-				
-				if (benchmark.keySet().contains(word.toLowerCase())) {
-					if (histogram.containsKey(word.toLowerCase())) {
+				String word = tokenizer.nextToken().toLowerCase();
+				if (benchmark.keySet().contains(word)) {
+					if (histogram.containsKey(word)) {
 						int count = histogram.get(word) + 1;
 						histogram.put(word, count);
 						total++;
