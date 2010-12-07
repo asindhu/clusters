@@ -12,7 +12,7 @@ public class Database {
 	
 	/* Instance Variables */
 	private static final int QUERY_SIZE = 10000;
-	private static final int THRESHOLD = 25;
+	private static final int THRESHOLD = 30;
 	private static final String XMLFILE = "output.xml";	
 	private static Set<String> stopwords;
 	private static Map<String, Double> benchmarkFeelings;
@@ -122,7 +122,7 @@ public class Database {
 		for (int i = 0; i < range; i++) {
 			String key = arr.get(i);
 			Double value = histogram.get(key);
-			System.out.println(key + ": " + value);
+			//System.out.println(key + ": " + value);
 			tops.put(key, value); 
 		}		
 		return tops;
@@ -265,7 +265,7 @@ public class Database {
 	
 //	public static void main(String [] args) {
 //		init();
-//		writeXMLFileForEmotionWeb("emotion_database.txt");
+//		writeXMLFileForEmotionWeb("emotion_database.xml");
 //		getTopics("awake", 10);
 //		System.out.println();
 //		Map<String, Double> results = getFeelings("pissed", 10);

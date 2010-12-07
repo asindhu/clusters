@@ -66,10 +66,14 @@ public class Vis extends JPanel {
 	
 	/* Combine the graph and tagcloud togethers */
 	private static void setFrame() {
+		
 		frame = new JFrame("M I X E D  F E E L I N G S");
 		frame.add(feelingsbox, BorderLayout.NORTH);
 		frame.add(feelingsgraph);
-		frame.add(tagcloud.display);
+		//frame.add(tagcloud.display);
+		frame.setBackground(Color.BLACK);
+		TagCloudEddie temp = new TagCloudEddie(frame, "upset");
+		frame.add(temp, BorderLayout.SOUTH);
 		
 		frame.pack(); 
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
