@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.Set;
 
 import prefuse.action.layout.graph.TreeLayout;
-import prefuse.action.layout.graph.RadialTreeLayout.Params;
 import prefuse.data.Edge;
 import prefuse.data.Graph;
 import prefuse.data.Node;
@@ -193,9 +192,16 @@ public class RadialMultiTreeLayout extends TreeLayout {
             }*/
         }
         
+        if (depthmap.containsKey(n.getString("name")))
+        	System.out.println("Root node already layed out");
+        
         // update properties of the root node
-        setX(n, null, m_origin.getX());
-        setY(n, null, m_origin.getY());
+        //setX(n, null, m_origin.getX());
+        //setY(n, null, m_origin.getY());
+        /* n.setStartX(n.getX());
+        n.setStartY(n.getY()); */
+        n.setEndX(m_origin.getX());
+        n.setEndY(m_origin.getY());
         np.angle = m_theta2-m_theta1;
     }
     

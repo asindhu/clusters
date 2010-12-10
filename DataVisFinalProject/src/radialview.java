@@ -80,6 +80,7 @@ import prefuse.util.FontLib;
 import prefuse.util.ui.JFastLabel;
 import prefuse.util.ui.JSearchPanel;
 import prefuse.util.ui.UILib;
+import prefuse.visual.NodeItem;
 import prefuse.visual.VisualItem;
 import prefuse.visual.expression.InGroupPredicate;
 import prefuse.visual.sort.TreeDepthItemSorter;
@@ -182,8 +183,11 @@ public class radialview extends Display {
         ActionList filter = new ActionList();
         filter.add(new TreeRootAction(tree));
         filter.add(fonts);
+        filter.add(new nodelocation(tree));
         filter.add(treeLayout);
+        filter.add(new nodelocation(tree));
         filter.add(subLayout);
+        filter.add(new nodelocation(tree));
         filter.add(textColor);
         filter.add(nodeColor);
         filter.add(edgeColor);
@@ -202,6 +206,8 @@ public class radialview extends Display {
         animate.add(edgeThickness);
         m_vis.putAction("animate", animate);
         m_vis.alwaysRunAfter("filter", "animate");
+        
+        
         
         // ------------------------------------------------
         
@@ -492,7 +498,7 @@ public class radialview extends Display {
             super(group, "index", Constants.ORDINAL, VisualItem.FILLCOLOR, palette);
         	//super(group, VisualItem.FILLCOLOR);
             add("_hover", ColorLib.gray(220,230));
-            add("ingroup('_search_')", ColorLib.rgb(200,16,18));
+            add("ingroup('_search_')", ColorLib.rgb(237,24,83));
             //add("ingroup('_focus_')", ColorLib.rgb(198,229,229));
             add("[shown]=='no'", ColorLib.rgba(0,0,0,0));
         }
@@ -523,6 +529,33 @@ public class radialview extends Display {
     		super(group, new BasicStroke(1.0f));
             add(ExpressionParser.predicate("[show]=='bold'"), new BasicStroke(2.0f));
     	}
+    }
+    
+    public static class nodelocation extends GroupAction {
+    	
+        public nodelocation(String graphGroup) {
+            super(graphGroup);
+        }
+        public void run(double frac) {
+            TupleSet focus = m_vis.getGroup(Visualization.FOCUS_ITEMS);
+            if ( focus==null || focus.getTupleCount() == 0 ) return;
+            
+            Graph g = (Graph)m_vis.getGroup(m_group);
+            
+            
+            Node f = null;
+            @SuppressWarnings("rawtypes")
+			Iterator tuples = focus.tuples();
+            while (tuples.hasNext() && !g.containsTuple(f=(Node)tuples.next()))
+            {
+                f = null;
+            }
+            if ( f == null ) return;
+            
+            NodeItem currnode = (NodeItem)f;
+            System.out.println("start loc: " +  currnode.getStartX() + " , " + currnode.getStartY());
+            System.out.println("end loc: " +  currnode.getEndX() + " , " + currnode.getEndY());
+        }
     }
     
 }
