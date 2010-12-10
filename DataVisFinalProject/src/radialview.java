@@ -47,7 +47,6 @@ import prefuse.action.assignment.DataSizeAction;
 import prefuse.action.assignment.FontAction;
 import prefuse.action.assignment.StrokeAction;
 import prefuse.action.layout.CollapsedSubtreeLayout;
-import prefuse.action.layout.graph.RadialTreeLayout;
 import prefuse.activity.SlowInSlowOutPacer;
 import prefuse.controls.ControlAdapter;
 import prefuse.controls.DragControl;

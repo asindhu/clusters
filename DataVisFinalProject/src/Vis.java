@@ -54,7 +54,7 @@ public class Vis extends JPanel {
         feelingsbox = radialview.buildBottomBox(feelingsgraph, feelingsgraph.getVisualization(), "name");
 	}
 	
-	/* Combine the graph and tagcloud togethers */
+	/* Combine the graph and tagcloud together */
 	private static void setFrame() {
 		
 		frame = new JFrame("M I X E D  F E E L I N G S");
