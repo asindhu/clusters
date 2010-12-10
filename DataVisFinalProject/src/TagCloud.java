@@ -53,8 +53,10 @@ public class TagCloud extends JPanel {
 			label.setAlignment(Label.LEFT);
 			label.setBackground(Color.BLACK);
 			label.setForeground( new Color(237, 24, 83));
-			label.setFont(new Font("SansSerif", Font.BOLD, scale(data.get(topic), max)));
-			label.setLocation(x, y);
+			int font_size = scale(data.get(topic), max);
+			int size_offset = (30 - font_size)/2;
+			label.setFont(new Font("SansSerif", Font.BOLD, font_size));
+			label.setLocation(x, y + size_offset);
 			
 			
 			
@@ -62,7 +64,7 @@ public class TagCloud extends JPanel {
 			if (endX > ROW_WIDTH) {
 				x = MARGIN;
 				y += ROW_HEIGHT;
-				label.setLocation(x,y);
+				label.setLocation(x,y+size_offset);
 				if (y > HEIGHT - MARGIN) {
 					//label.setText("");
 					//label.setLocation(0, 0);

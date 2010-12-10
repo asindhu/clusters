@@ -43,6 +43,7 @@ import prefuse.action.animate.QualityControlAnimator;
 import prefuse.action.animate.VisibilityAnimator;
 import prefuse.action.assignment.ColorAction;
 import prefuse.action.assignment.DataColorAction;
+import prefuse.action.assignment.DataSizeAction;
 import prefuse.action.assignment.FontAction;
 import prefuse.action.assignment.StrokeAction;
 import prefuse.action.layout.CollapsedSubtreeLayout;
@@ -145,6 +146,10 @@ public class radialview extends Display {
                 FontLib.getFont("Tahoma", 10));
         fonts.add("ingroup('_focus_')", FontLib.getFont("Tahoma", 11));
         
+        // edge weights
+        DataSizeAction edgeThickness = new DataSizeAction(treeEdges, "weight");        
+        m_vis.putAction("edgeThickness", edgeThickness);
+        
         // recolor
         ActionList recolor = new ActionList();
         recolor.add(nodeColor);
@@ -183,6 +188,7 @@ public class radialview extends Display {
         filter.add(nodeColor);
         filter.add(edgeColor);
         filter.add(edgeWeight);
+        filter.add(edgeThickness);
         m_vis.putAction("filter", filter);
         
         // animated transition
@@ -193,6 +199,7 @@ public class radialview extends Display {
         animate.add(new PolarLocationAnimator(treeNodes, linear));
         animate.add(new ColorAnimator(treeNodes));
         animate.add(new RepaintAction());
+        animate.add(edgeThickness);
         m_vis.putAction("animate", animate);
         m_vis.alwaysRunAfter("filter", "animate");
         
@@ -359,6 +366,7 @@ public class radialview extends Display {
 		g.addColumn("shown", String.class);
 		g.addColumn("index", Integer.class);
 		g.getEdgeTable().addColumn("show", String.class);
+		g.getEdgeTable().addColumn("weight", int.class);
 		fnodes = new HashMap<String, Node>();
 		Set<String> feelings = new HashSet<String>();
 		
@@ -391,6 +399,12 @@ public class radialview extends Display {
         	{
         		Edge ne = g.addEdge(fnodes.get(feeling), fnodes.get(feeling2));
      			ne.setString("show", "yes");
+     			double double_weight = Double.parseDouble(element.getAttribute("freq"));
+     			int edgeWeight = (int)double_weight;
+     			if (edgeWeight == 0) edgeWeight = 1;
+     			if (edgeWeight > 30) edgeWeight = 30;
+     			
+     			ne.setInt("weight", edgeWeight);
         	}
         }
 		palette = new int[tmplette.size()];
@@ -478,7 +492,7 @@ public class radialview extends Display {
             super(group, "index", Constants.ORDINAL, VisualItem.FILLCOLOR, palette);
         	//super(group, VisualItem.FILLCOLOR);
             add("_hover", ColorLib.gray(220,230));
-            add("ingroup('_search_')", ColorLib.rgb(237,24,83));
+            add("ingroup('_search_')", ColorLib.rgb(200,16,18));
             //add("ingroup('_focus_')", ColorLib.rgb(198,229,229));
             add("[shown]=='no'", ColorLib.rgba(0,0,0,0));
         }

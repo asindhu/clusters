@@ -50,7 +50,7 @@ public class Vis extends JPanel {
 		NodeList nl = feelingsgraph.getAssociatedFeelingsFromXMLFile("emotion_database.xml");
         Graph g2 = feelingsgraph.buildGraph(nl,"unsafe");
         feelingsgraph = new radialview(g2,"name", true);
-        feelingsgraph.setBackground(Color.WHITE);
+        feelingsgraph.setBackground(Color.BLACK);
         feelingsbox = radialview.buildBottomBox(feelingsgraph, feelingsgraph.getVisualization(), "name");
 	}
 	
