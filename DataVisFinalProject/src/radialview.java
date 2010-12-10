@@ -478,7 +478,7 @@ public class radialview extends Display {
             super(group, "index", Constants.ORDINAL, VisualItem.FILLCOLOR, palette);
         	//super(group, VisualItem.FILLCOLOR);
             add("_hover", ColorLib.gray(220,230));
-            add("ingroup('_search_')", ColorLib.rgb(200,16,18));
+            add("ingroup('_search_')", ColorLib.rgb(237,24,83));
             //add("ingroup('_focus_')", ColorLib.rgb(198,229,229));
             add("[shown]=='no'", ColorLib.rgba(0,0,0,0));
         }
